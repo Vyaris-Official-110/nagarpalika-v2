@@ -2,11 +2,18 @@ import Candidate from "../../models/Candidate.js";
 
 export const listCandidates = async (req, res) => {
   try {
-    let { skip = 0, per_page = 10, sorton, sortdir, match, isActive } =
-      req.body;
+    let {
+      skip = 0,
+      per_page = 10,
+      sorton,
+      sortdir,
+      match,
+      isActive,
+    } = req.body;
 
     const baseMatch = { tenantId: req.tenantId };
-    if (isActive !== undefined && isActive !== null) baseMatch.isActive = isActive;
+    if (isActive !== undefined && isActive !== null)
+      baseMatch.isActive = isActive;
 
     let query = [
       { $match: baseMatch },

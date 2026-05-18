@@ -2,14 +2,7 @@ import CallLetter from "../../models/CallLetter.js";
 
 export const listCallLetters = async (req, res) => {
   try {
-    let {
-      skip = 0,
-      per_page = 10,
-      sorton,
-      sortdir,
-      match,
-      enabled,
-    } = req.body;
+    let { skip = 0, per_page = 10, sorton, sortdir, match, enabled } = req.body;
 
     const baseMatch = { tenantId: req.tenantId };
     if (enabled !== undefined && enabled !== null) baseMatch.enabled = enabled;
@@ -74,9 +67,7 @@ export const getCallLetterById = async (req, res) => {
         .json({ isOk: false, message: "Call letter not found", status: 404 });
     }
 
-    return res
-      .status(200)
-      .json({ isOk: true, data: callLetter, status: 200 });
+    return res.status(200).json({ isOk: true, data: callLetter, status: 200 });
   } catch (error) {
     console.error("Error in getCallLetterById:", error);
     return res

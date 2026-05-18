@@ -78,9 +78,7 @@ export const getApplicationById = async (req, res) => {
         .json({ isOk: false, message: "Application not found", status: 404 });
     }
 
-    return res
-      .status(200)
-      .json({ isOk: true, data: application, status: 200 });
+    return res.status(200).json({ isOk: true, data: application, status: 200 });
   } catch (error) {
     console.error("Error in getApplicationById:", error);
     return res

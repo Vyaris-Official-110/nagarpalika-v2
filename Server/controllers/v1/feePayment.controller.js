@@ -2,14 +2,7 @@ import FeePayment from "../../models/FeePayment.js";
 
 export const listFeePayments = async (req, res) => {
   try {
-    let {
-      skip = 0,
-      per_page = 10,
-      sorton,
-      sortdir,
-      match,
-      status,
-    } = req.body;
+    let { skip = 0, per_page = 10, sorton, sortdir, match, status } = req.body;
 
     const baseMatch = { tenantId: req.tenantId };
     if (status) baseMatch.status = status;
