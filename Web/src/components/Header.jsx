@@ -1,16 +1,75 @@
+import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
 import SiteMarquee from './SiteMarquee'
 
 const NAV = [
-  { path: '/',           key: 'nav.home',       fallback: 'HOME' },
-  { path: '/about',      key: 'nav.about',      fallback: 'ABOUT' },
-  { path: '/careers',    key: 'nav.careers',    fallback: 'CAREERS / ભરતી' },
-  { path: '/notices',    key: 'nav.notices',    fallback: 'NOTICES' },
-  { path: '/results',    key: 'nav.results',    fallback: 'RESULT' },
-  { path: '/callletter', key: 'nav.callletter', fallback: 'CALL LETTER' },
-  { path: '/contact',    key: 'nav.contact',    fallback: 'CONTACT' },
+  { path: '/',        key: 'nav.home',       fallback: 'HOME' },
+  { path: '/about',   key: 'nav.about',      fallback: 'ABOUT' },
+  { path: '/notices', key: 'nav.notices',    fallback: 'NOTICES' },
+  { path: '/results', key: 'nav.results',    fallback: 'RESULT' },
+  {
+    key: 'nav.registration', fallback: 'REGISTRATION',
+    children: [
+      { path: '/otr',      key: 'nav.otr',      fallback: 'One-Time Registration (OTR)' },
+      { path: '/careers',  key: 'nav.careers',  fallback: 'Advertisements / ભરતી' },
+    ],
+  },
+  {
+    key: 'nav.apply', fallback: 'ONLINE APPLICATION',
+    children: [
+      { path: '/apply',       key: 'nav.apply.form',  fallback: 'Apply Online' },
+      { path: '/callletter',  key: 'nav.callletter',  fallback: 'Call Letter' },
+      { path: '/application', key: 'nav.appstatus',   fallback: 'Application Status' },
+    ],
+  },
+  { path: '/help',    key: 'nav.help',       fallback: 'HELP' },
+  { path: '/contact', key: 'nav.contact',    fallback: 'CONTACT' },
 ]
+
+function Dropdown({ item, pathname, t }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  const isActive = item.children.some(c => pathname === c.path)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div className={`nav-dropdown${open ? ' open' : ''}`} ref={ref}>
+      <button
+        type="button"
+        className={`nav-dropdown-btn${isActive ? ' active' : ''}`}
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+      >
+        {t(item.key) || item.fallback}
+        <span className="nav-chevron" aria-hidden="true">▾</span>
+      </button>
+      {open && (
+        <div className="nav-dropdown-menu" role="menu">
+          {item.children.map(child => (
+            <Link
+              key={child.path}
+              to={child.path}
+              role="menuitem"
+              className={pathname === child.path ? 'active' : ''}
+              onClick={() => setOpen(false)}
+            >
+              {t(child.key) || child.fallback}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Header() {
   const { lang, setLang, t } = useLang()
@@ -56,16 +115,20 @@ export default function Header() {
         </div>
       </div>
 
-      <nav className="nav-row">
-        {NAV.map(({ path, key, fallback }) => (
-          <Link
-            key={path}
-            to={path}
-            className={pathname === path ? 'active' : ''}
-          >
-            {t(key) || fallback}
-          </Link>
-        ))}
+      <nav className="nav-row" aria-label="Main navigation">
+        {NAV.map(item =>
+          item.children ? (
+            <Dropdown key={item.key} item={item} pathname={pathname} t={t} />
+          ) : (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={pathname === item.path ? 'active' : ''}
+            >
+              {t(item.key) || item.fallback}
+            </Link>
+          )
+        )}
       </nav>
 
       <SiteMarquee />

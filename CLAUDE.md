@@ -55,7 +55,7 @@ nagarpalika-v2/
 | Phase | Status | Next Action | Blockers |
 |-------|--------|-------------|----------|
 | P1 · Foundation | 🟢 Done | Models + middleware shipped. Next: add candidate/application/fee/callLetter controllers+routes in their respective phases | — |
-| P2 · Public Frontend | 🔴 Not started | Nav restructure + wire `/careers`, `/notices` to API + add `/registration`, `/application`, `/fee`, `/help` routes | P1 ✅ — unblocked |
+| P2 · Public Frontend | 🟢 Done | Notice + HelpQuery models/controllers/routes; Careers + Notices pages fetch from API; dropdown nav with Registration + Online Application groups; Help page with FAQ + contact form | — |
 | P3 · OTR Registration | 🔴 Not started | 10-step Aadhaar OTP registration flow (Server routes + Web UI) | Q#1 (edit window), Q#3 (Aadhaar method), UIDAI AUA empanelment |
 | P4 · Application | 🔴 Not started | Apply flow + edit window + print PDF | **Q#8: form fields unresolved (HARD BLOCK)** |
 | P5 · Fee Payment | 🔴 Not started | Payment gateway adapter + webhook HMAC + PDF receipt | Q#2 (online-only?), Q#7 (gateway choice), contract not signed |
