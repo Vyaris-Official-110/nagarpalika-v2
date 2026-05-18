@@ -27,6 +27,14 @@ import MasterData from "../pages/MasterData/MasterData";
 import MasterDataForm from "../pages/MasterData/MasterDataForm";
 import Reports from "../pages/Reports/Reports";
 import WhatsAppMessages from "../pages/WhatsApp/WhatsAppMessages";
+import Advertisements from "../pages/Recruitment/Advertisements";
+import AdvertisementsForm from "../pages/Recruitment/AdvertisementsForm";
+import Candidates from "../pages/Recruitment/Candidates";
+import Applications from "../pages/Recruitment/Applications";
+import FeePayments from "../pages/Recruitment/FeePayments";
+import CallLetters from "../pages/Recruitment/CallLetters";
+import RecruitmentNotices from "../pages/Recruitment/Notices";
+import NoticesForm from "../pages/Recruitment/NoticesForm";
 
 const authProtectedRoutes = [
     { path: "/profile",         component: <UserProfile /> },
@@ -94,6 +102,20 @@ const authProtectedRoutes = [
     // Notifications & Reports
     { path: "/whatsapp", component: <WhatsAppMessages /> },
     { path: "/reports",  component: <Reports /> },
+
+    // Recruitment
+    { path: "/advertisement",          component: <Advertisements /> },
+    { path: "/advertisement/add",      component: <AdvertisementsForm /> },
+    { path: "/advertisement/:id",      component: <AdvertisementsForm /> },
+    { path: "/advertisement/:id/edit", component: <AdvertisementsForm /> },
+
+    { path: "/candidates",  component: <Candidates /> },
+    { path: "/applications", component: <Applications /> },
+    { path: "/fee-payments", component: <FeePayments /> },
+    { path: "/call-letters", component: <CallLetters /> },
+
+    { path: "/notice",     component: <RecruitmentNotices /> },
+    { path: "/notice/add", component: <NoticesForm /> },
 
     { path: "/",  exact: true, component: <Navigate to="/dashboard" /> },
     { path: "*",  component: <Navigate to="/dashboard" /> },

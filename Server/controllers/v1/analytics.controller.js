@@ -1,30 +1,43 @@
-import Payment from "../../models/Payment.js";
-
-// ── Dashboard Stats ──────────────────────────────────────────────────────────
-// TODO Phase 1: Replace stub with real recruitment stats using new models:
-//   - Advertisement (active count, closing soon)
-//   - Candidate / OTR (total registered, registered today)
-//   - Application (total submitted, pending review)
-//   - FeePayment (total collected, pending)
-//   - CallLetter (total enabled advts)
+import Advertisement from "../../models/Advertisement.js";
+import Candidate from "../../models/Candidate.js";
+import Application from "../../models/Application.js";
+import FeePayment from "../../models/FeePayment.js";
 
 export const getDashboardStats = async (req, res) => {
-  res.json({
-    isOk: true,
-    data: {
-      message: "Recruitment dashboard — analytics coming in Phase 1",
-      stats: {
-        activeAdvertisements: 0,
-        totalCandidates: 0,
-        totalApplications: 0,
-        totalFeesCollected: 0,
-      },
-    },
-  });
-};
+  try {
+    const tenantId = req.tenantId;
 
-// TODO Phase 1: Add these exports when recruitment models are ready:
-// export const getApplicationsReport  = async (req, res) => { ... };
-// export const getCandidatesReport    = async (req, res) => { ... };
-// export const getFeeCollectionReport = async (req, res) => { ... };
-// export const getCallLetterReport    = async (req, res) => { ... };
+    const [activeAdvertisements, totalCandidates, totalApplications, feeAgg] =
+      await Promise.all([
+        Advertisement.countDocuments({
+          tenantId,
+          status: "published",
+          isDeleted: false,
+        }),
+        Candidate.countDocuments({ tenantId, isActive: true }),
+        Application.countDocuments({ tenantId, isDeleted: false }),
+        FeePayment.aggregate([
+          { $match: { tenantId, status: "success" } },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+      ]);
+
+    const totalFeesCollected = feeAgg[0]?.total ?? 0;
+
+    return res.status(200).json({
+      isOk: true,
+      data: {
+        activeAdvertisements,
+        totalCandidates,
+        totalApplications,
+        totalFeesCollected,
+      },
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error in getDashboardStats:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
