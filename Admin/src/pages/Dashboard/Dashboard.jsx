@@ -7,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import { AuthContext } from "../../context/AuthContext";
 import { getDashboardStats } from "../../api/analytics.api";
-import DoctorDashboard from "./DoctorDashboard";
-import { ROLES } from "../../constants/roles";
 
 const dashboardStyles = `
 .vy-dashboard {
@@ -126,16 +124,9 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const isDoctor = adminData?.role === ROLES.DOCTOR;
-
   useEffect(() => {
-    if (isDoctor) return;
     fetchStats();
-  }, [isDoctor]);
-
-  if (isDoctor) {
-    return <DoctorDashboard />;
-  }
+  }, []);
 
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Good morning" : currentHour < 17 ? "Good afternoon" : "Good evening";
