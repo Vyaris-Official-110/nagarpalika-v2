@@ -1,8 +1,8 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-18 (post HMS cleanup — commit 8128381)
+> Last updated: 2026-05-19 (P1+P2+P7 complete — branch feat/p7-admin-panel)
 > Source: Full codebase scan of Web/, Admin/, Server/
-> **Current state:** HMS code removed. Recruitment-specific models/routes/pages not yet built. This is the clean starting point.
+> **Current state:** P1 foundation, P2 public frontend, P7 admin panel all shipped. Recruitment models/routes/pages built. OTR/Application/Fee/CallLetter citizen flows not yet started (blocked).
 
 ---
 
@@ -29,7 +29,7 @@ Nagarpalika/
 | **Fonts** | Noto Sans + Noto Sans Gujarati (Google Fonts) |
 | **i18n** | Custom `LangContext` — EN / HI / GU, persisted in localStorage |
 | **State** | React hooks only (useState, useContext) |
-| **API calls** | **None** — all data is static/hardcoded |
+| **API calls** | Axios via `src/api/index.js` — `/api/v1/` prefix, `withCredentials: true` |
 | **Dev port** | 5173 (Vite default) |
 | **Entry** | `Web/index.html` → `src/main.jsx` → `src/App.jsx` |
 
@@ -39,26 +39,25 @@ Nagarpalika/
 |------|-----------|--------|
 | `/` | `Home.jsx` | Static — hardcoded facts/news/services |
 | `/about` | `About.jsx` | Static |
-| `/careers` | `Careers.jsx` | Static — data from `src/data/jobs.js` |
-| `/notices` | `Notices.jsx` | Static — hardcoded notice list |
+| `/careers` | `Careers.jsx` | **API-driven** — fetches from `GET /api/v1/advertisements` |
+| `/notices` | `Notices.jsx` | **API-driven** — fetches from `GET /api/v1/notices` |
+| `/help` | `Help.jsx` | **API-driven** — FAQ + contact form → `POST /api/v1/help-queries` |
 | `/results` | `Results.jsx` | Static — form UI-only (not functional) |
 | `/callletter` | `CallLetter.jsx` | Static — form UI-only (not functional) |
 | `/contact` | `Contact.jsx` | Static — form UI-only (not functional) |
 
-### Data Files (all hardcoded — to be replaced with API calls)
+### Data Files
 
 | File | Contents |
 |------|----------|
-| `src/data/jobs.js` | 10 job postings (JOBS array) |
 | `src/data/marqueeItems.js` | 5 marquee ticker items |
-| `src/data/i18n.js` | 40+ translation keys × 3 languages |
+| `src/data/i18n.js` | 40+ translation keys × 3 languages (EN/HI/GU) |
+| `src/api/index.js` | Axios instance — base URL from `VITE_API_URL`, `withCredentials: true` |
 
-### What Needs to Be Built (Phase 2+)
+### What Needs to Be Built (Phase 3+)
 
-- Wire `/careers`, `/notices`, `/results` to Server API
-- Add `/registration`, `/application`, `/fee`, `/help` routes
-- Nav restructure: add dropdowns (Registration, Online Application)
-- Replace all static data arrays with API calls
+- Add `/registration`, `/application`, `/fee` routes (blocked by Q#3, Q#8, Q#7)
+- Nav dropdowns for Registration + Online Application (P3)
 
 ---
 
@@ -102,32 +101,34 @@ Nagarpalika/
 - Every protected page checks `currentPagePermissions` before showing action buttons
 - `AuthProtected.jsx` redirects to `/` if no session role
 
-### Current Routes (HMS — to be repurposed for Nagar Palika)
+### Current Routes (Nagar Palika — P7 complete)
 
-HMS pages that map to Nagar Palika equivalents:
+| Route | Component | Purpose |
+|-------|-----------|---------|
+| `/dashboard` | `Dashboard.jsx` | Recruitment stats (activeAdvt, candidates, applications, feesCollected) |
+| `/advertisement` | `Advertisements.jsx` | Advertisement list + publish/close/delete |
+| `/advertisement/add` | `AdvertisementsForm.jsx` | Create advertisement |
+| `/advertisement/:id/edit` | `AdvertisementsForm.jsx` | Edit advertisement |
+| `/candidates` | `Candidates.jsx` | OTR candidate list + activate/deactivate |
+| `/applications` | `Applications.jsx` | Application list + inline status update |
+| `/fee-payments` | `FeePayments.jsx` | Fee payment list (read-only) |
+| `/call-letters` | `CallLetters.jsx` | Call letter list + enable/disable |
+| `/notice` | `Notices.jsx` | Notice list + publish/delete |
+| `/notice/add` | `NoticesForm.jsx` | Create notice |
+| `/employee` | `Employee.jsx` | Admin user management |
+| `/employee-roles` | `EmployeeRoles.jsx` | Role permission matrix |
+| `/department` | `Department.jsx` | Department CRUD |
+| `/whatsapp` | `WhatsAppMessages.jsx` | WhatsApp message log |
+| `/reports` | `Reports.jsx` | Recruitment reports (stub) |
+| `/role-master` | `RoleMaster.jsx` | Role management |
+| `/menu-master` | `MenuMaster.jsx` | Menu management |
+| `/master-data` | `MasterData.jsx` | Master data (gender, category, etc.) |
 
-| HMS Route | HMS Purpose | Nagar Palika Equivalent |
-|-----------|-------------|------------------------|
-| `/dashboard` | Analytics dashboard | Recruitment dashboard |
-| `/employee` | Staff management | Admin user management |
-| `/patients` | Patient list | Applicant (OTR) list |
-| `/patients/new` | Patient registration | OTR registration review |
-| `/appointments` | Appointment list | Job application list |
-| `/invoices` | Invoice management | Fee payment management |
-| `/whatsapp` | WhatsApp messages | Notification log |
-| `/email-template` | Email templates | Notification templates |
-| `/role-master` | Role management | Admin role management |
-| `/menu-master` | Menu management | Admin menu management |
-| `/employee-roles` | Role permissions matrix | Admin permission matrix |
-| `/reports` | Analytics reports | Recruitment reports |
-| `/department` | Department CRUD | Department CRUD (keep) |
+### What Needs to Be Built (Phase 8+)
 
-### What Needs to Be Built (Phase 7)
-
-- Replace all HMS-specific pages with recruitment portal admin pages
-- New pages: Advertisement management, Call Letter management, Bulk ZIP export
-- Update `LayoutMenuData.jsx` with Nagar Palika admin menu structure
-- Update `constants/roles.js`: replace DOCTOR with DEPT_ADMIN, add SUPER_ADMIN
+- Help queries admin inbox page (referenced in dashboard, route missing)
+- Bulk ZIP export for call letters (P7 spec item, not yet implemented)
+- Recruitment event email triggers (P8)
 
 ---
 
@@ -161,47 +162,47 @@ HMS pages that map to Nagar Palika equivalents:
 8. Route handlers
 9. Global error handler (no stack traces in production)
 
-### Current Models (HMS — to be repurposed)
+### Current Models (built — P1 complete)
 
-| HMS Model | Nagar Palika Equivalent | Action |
-|-----------|------------------------|--------|
-| `CompanyMaster` | Municipality config | Rename + add municipality fields |
-| `Employee` | Admin user | Rename to AdminUser; keep structure |
-| `RoleMaster` | Admin role | Keep; rename roles |
-| `Department` | Department | Keep as-is |
-| `Patient` | Candidate (OTR) | Replace with OTR Candidate model |
-| `Doctor` | — | Remove |
-| `Appointment` | Job Application | Replace with Application model |
-| `Invoice` | Fee Payment | Replace with FeePayment model |
-| `Payment` | Fee receipt | Fold into FeePayment |
-| `TreatmentPlan` | — | Remove |
-| `Prescription` | — | Remove |
-| `PatientDocument` | Applicant document | Rename; adjust fields |
-| `WhatsAppConfig` | WhatsApp config | Keep as-is (perfect fit) |
-| `WhatsAppMessage` | Notification log | Keep as-is |
-| `EmailSetup` | Email config | Keep as-is |
-| `EmailTemplate` | Notification template | Keep as-is |
-| `MasterData` | Master data (gender, category, etc.) | Keep; add recruitment categories |
-| `MenuMaster` | Admin menu | Keep as-is |
-| `Otp` | OTP (TTL-indexed) | Keep as-is |
-| `Country/State/City` | Location data | Keep as-is |
-| `CurrencyMaster` | — | Remove |
+| Model | File | Key Fields |
+|-------|------|-----------|
+| `Advertisement` | `models/Advertisement.js` | advtNo, postTitle, departmentId, postClass, payScale, vacancies, applicationFee, startDate, endDate, pdfPath, status (draft/published/closed), tenantId, isDeleted |
+| `Candidate` | `models/Candidate.js` | registrationId, aadhaarHash (SHA-256, never returned in API), name, dob, gender, category, address, mobile, email, photoPath, signaturePath, isActive, tenantId |
+| `Application` | `models/Application.js` | applicationRefNo, registrationId, advtNo, submittedAt, status (draft/submitted/fee_pending/fee_paid/shortlisted/rejected), tenantId, isDeleted |
+| `FeePayment` | `models/FeePayment.js` | paymentId, applicationRefNo, amount, gatewayTxnId, mode, status (pending/success/failed/refunded), receiptPath, paidAt, tenantId |
+| `CallLetter` | `models/CallLetter.js` | registrationId, advtNo, rollNumber, examDate, venue, availableFrom, enabled, tenantId |
+| `Notice` | `models/Notice.js` | title, type (notice/circular/tender/press/recruitment/result/important_instruction), refNo, pdfPath, status (draft/published), publishedAt, expiresAt, tenantId |
+| `HelpQuery` | `models/HelpQuery.js` | name, email, mobile, subject, message, status (open/in_progress/resolved), tenantId |
+| `CompanyMaster` | `models/CompanyMaster.js` | Municipality config (kept from HMS) |
+| `Employee` | `models/Employee.js` | Admin user (kept from HMS) |
+| `RoleMaster` | `models/RoleMaster.js` | Admin roles |
+| `Department` | `models/Department.js` | Department CRUD |
+| `WhatsAppConfig/Message` | existing | Notification config + log |
+| `EmailSetup/EmailFor/EmailTemplate` | existing | Email notification config |
+| `MasterData` | existing | Gender, category, etc. |
+| `MenuMaster/MenuGroup` | existing | Admin menu management |
+| `Otp` | existing | TTL-indexed OTP (10-min expiry) |
+| `Country/State/City` | existing | Location data |
 
-### New Models Needed (Phase 1)
+### API Routes Built (Server)
 
-| Model | Key Fields |
-|-------|-----------|
-| `Advertisement` | advt_no, post_title, department, class, pay_scale, vacancies, fee, start_date, end_date, pdf_path, status, tenant_id |
-| `Candidate` (OTR) | registration_id, aadhaar_hash, name, dob, gender, category, address, mobile, email, photo_path, signature_path, languages, tenant_id |
-| `Application` | application_ref_no, registration_id, advt_no, submitted_at, status, edit_log, tenant_id |
-| `FeePayment` | payment_id, application_ref_no, amount, gateway_txn_id, mode, status, receipt_path, tenant_id |
-| `CallLetter` | registration_id, advt_no, roll_number, exam_date, venue, enabled, available_from, tenant_id |
+| Prefix | Controller | Methods |
+|--------|-----------|---------|
+| `/api/v1/advertisements` | `advertisement.controller.js` | search (POST), getById, create, update, publish (PATCH), close (PATCH), delete |
+| `/api/v1/candidates` | `candidate.controller.js` | search (POST), getById, toggleStatus (PATCH) |
+| `/api/v1/applications` | `application.controller.js` | search (POST), getById, updateStatus (PATCH) |
+| `/api/v1/fee-payments` | `feePayment.controller.js` | search (POST), getById |
+| `/api/v1/call-letters` | `callLetter.controller.js` | search (POST), getById, update (PATCH) |
+| `/api/v1/notices` | `notice.controller.js` | search (POST), create, getById, publish (PATCH), delete |
+| `/api/v1/help-queries` | `helpQuery.controller.js` | create (public), search (POST, admin), updateStatus (PATCH) |
+| `/api/v1/analytics` | `analytics.controller.js` | getDashboardStats (activeAdvt, totalCandidates, totalApplications, totalFeesCollected) |
 
 ### Multi-Tenant Status
 
-**Current:** Single-tenant. Most models have NO `organizationId`/`tenant_id`.
-**Required:** `tenant_id` derived from `Host` header on every request. Two subdomains = two isolated DB namespaces.
-**Approach:** Add `tenant_id` to all new models. Existing models (Employee, Dept, Menu, Role) can stay single-tenant initially if only one municipality uses admin panel.
+**Current:** Implemented for all recruitment models.
+- `tenantMiddleware.js` — derives `req.tenantId` from `Host` header subdomain; dev override via `x-tenant-id` header
+- All recruitment models (Advertisement, Candidate, Application, FeePayment, CallLetter, Notice, HelpQuery) include `tenantId` field and filter by it in every query
+- Legacy admin models (Employee, Dept, MenuMaster, Role) remain single-tenant — acceptable while only one municipality uses admin panel
 
 ### Security Features Already Present
 

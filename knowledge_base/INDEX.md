@@ -158,21 +158,21 @@
 
 ## Phases
 
-Build order is sequential. 🟡 = infra done, recruitment features pending. 🔴 = not started.
+Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 
-**Starting point as of 2026-05-18:** Express + MongoDB + session auth + WhatsApp + Email + OTP + secure uploads + admin panel auth/permissions/CRUD all exist. Recruitment-specific models, routes, and frontend flows are what remains to be built.
+**State as of 2026-05-19:** P1 (foundation), P2 (public frontend), P7 (admin panel) complete. P3/P4/P5/P6 blocked by open questions or external dependencies. P8 partial — email implementable, WhatsApp blocked by BSP. P9 not started.
 
 | Phase | File | Depends On | Status | Remaining Work |
 |-------|------|-----------|--------|----------------|
-| 1 | [Foundation](phases/phase-1-foundation.md) | None | 🟡 Partial | Multi-tenant middleware + 6 recruitment models + routes |
-| 2 | [Public Frontend](phases/phase-2-public-frontend.md) | Phase 1 | 🔴 Not Started | Nav restructure + API wiring + /help page |
-| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🔴 Not Started | 10-step form + UIDAI OTP + citizen auth |
-| 4 | [Application](phases/phase-4-application.md) | Phase 3 | 🔴 Not Started | Apply flow + edit + print PDF |
-| 5 | [Fee Payment](phases/phase-5-fee-payment.md) | Phase 4 | 🔴 Not Started | Payment gateway adapter + webhook HMAC + receipts |
-| 6 | [Call Letter](phases/phase-6-call-letter.md) | Phase 5, 7 | 🔴 Not Started | Eligibility check + signed download token |
-| 7 | [Admin Panel](phases/phase-7-admin-panel.md) | Phase 1 | 🟡 Partial | 6 recruitment pages (Advt, Candidates, Applications, Fee, CallLetter, Notices) |
-| 8 | [Notifications](phases/phase-8-notifications.md) | Phase 3, 7 | 🟡 Partial | Recruitment triggers + SMS fallback + UIDAI OTP + email service |
-| 9 | [Security & Pentest](phases/phase-9-security-pentest.md) | All phases | 🔴 Not Started | Hardening checklist + pentest + remediation SLA |
+| 1 | [Foundation](phases/phase-1-foundation.md) | None | 🟢 Done | — |
+| 2 | [Public Frontend](phases/phase-2-public-frontend.md) | Phase 1 | 🟢 Done | — |
+| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🔴 Not Started | 10-step form + UIDAI OTP + citizen auth — blocked: Q#1, Q#3, UIDAI empanelment |
+| 4 | [Application](phases/phase-4-application.md) | Phase 3 | 🔴 Not Started | Apply flow + edit + print PDF — **HARD BLOCK: Q#8 form fields** |
+| 5 | [Fee Payment](phases/phase-5-fee-payment.md) | Phase 4 | 🔴 Not Started | Payment gateway adapter + webhook HMAC + receipts — blocked: Q#2, Q#7, contract |
+| 6 | [Call Letter](phases/phase-6-call-letter.md) | Phase 5, 7 | 🔴 Not Started | Eligibility check + signed download token — depends on P4, P5 |
+| 7 | [Admin Panel](phases/phase-7-admin-panel.md) | Phase 1 | 🟢 Done | — |
+| 8 | [Notifications](phases/phase-8-notifications.md) | Phase 3, 7 | 🟡 Partial | Recruitment event triggers + SMS fallback + UIDAI OTP wiring + email service — **HARD BLOCK: Q#9 WhatsApp BSP** |
+| 9 | [Security & Pentest](phases/phase-9-security-pentest.md) | All phases | 🔴 Not Started | Hardening checklist + pentest + remediation SLA — depends on P1–P8 |
 
 ### Open Questions Blocking Phases
 

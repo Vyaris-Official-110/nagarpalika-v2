@@ -79,7 +79,9 @@ nagarpalika-v2/
 ### Update Protocol
 
 After any implementation session:
-1. Update Status: 🔴 not started → 🟡 partial → 🟢 done
+1. Update Status column here: 🔴 not started → 🟡 partial → 🟢 done
 2. Update Next Action to the immediate next concrete step
 3. Remove resolved blockers; add newly discovered ones
-4. Commit: `chore(claude): update task sheet`
+4. **Sync `knowledge_base/INDEX.md`** — update Phase table Status + Remaining Work columns to match this task sheet
+5. **Sync `knowledge_base/tech-stack.md`** — update whichever sections changed (routes, models, API calls status)
+6. Commit both CLAUDE.md + vault files: `chore(claude): update task sheet + vault sync`
