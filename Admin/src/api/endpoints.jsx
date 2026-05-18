@@ -129,9 +129,49 @@ export const ENDPOINTS = {
         RETRY:           `${V1}/whatsapp/retry`,
     },
 
-    // ── Recruitment Portal Endpoints (Phase 1) ────────────────────────────────
-    // ADVERTISEMENTS, CANDIDATES, APPLICATIONS, FEE_PAYMENTS, CALL_LETTERS, NOTICES
-    // will be added here when Phase 1 backend is built.
+    // ── Recruitment Portal ────────────────────────────────────────────────────
+    ADVERTISEMENTS: {
+        BASE:    `${V1}/advertisements`,
+        BY_ID:   (id) => `${V1}/advertisements/${id}`,
+        SEARCH:  `${V1}/advertisements/search`,
+        PUBLISH: (id) => `${V1}/advertisements/${id}/publish`,
+        CLOSE:   (id) => `${V1}/advertisements/${id}/close`,
+    },
+
+    CANDIDATES: {
+        SEARCH: `${V1}/candidates/search`,
+        BY_ID:  (id) => `${V1}/candidates/${id}`,
+        STATUS: (id) => `${V1}/candidates/${id}/status`,
+    },
+
+    APPLICATIONS: {
+        SEARCH: `${V1}/applications/search`,
+        BY_ID:  (id) => `${V1}/applications/${id}`,
+        STATUS: (id) => `${V1}/applications/${id}/status`,
+    },
+
+    FEE_PAYMENTS: {
+        SEARCH: `${V1}/fee-payments/search`,
+        BY_ID:  (id) => `${V1}/fee-payments/${id}`,
+    },
+
+    CALL_LETTERS: {
+        SEARCH: `${V1}/call-letters/search`,
+        BY_ID:  (id) => `${V1}/call-letters/${id}`,
+        UPDATE: (id) => `${V1}/call-letters/${id}`,
+    },
+
+    NOTICES: {
+        BASE:    `${V1}/notices`,
+        BY_ID:   (id) => `${V1}/notices/${id}`,
+        SEARCH:  `${V1}/notices/search`,
+        PUBLISH: (id) => `${V1}/notices/${id}/publish`,
+    },
+
+    HELP_QUERIES: {
+        SEARCH: `${V1}/help/queries/search`,
+        STATUS: (id) => `${V1}/help/queries/${id}/status`,
+    },
 };
 
 export default ENDPOINTS;

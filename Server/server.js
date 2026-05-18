@@ -192,6 +192,10 @@ import whatsappRoutes from "./routes/v1/whatsapp.routes.js";
 import advertisementsRoutes from "./routes/v1/advertisements.routes.js";
 import noticesRoutes from "./routes/v1/notices.routes.js";
 import helpQueryRoutes from "./routes/v1/helpQuery.routes.js";
+import candidatesRoutes from "./routes/v1/candidates.routes.js";
+import applicationsRoutes from "./routes/v1/applications.routes.js";
+import feePaymentsRoutes from "./routes/v1/feePayments.routes.js";
+import callLettersRoutes from "./routes/v1/callLetters.routes.js";
 
 app.use("/api/v1", companiesRoutes);
 app.use("/api/v1", departmentsRoutes);
@@ -208,6 +212,10 @@ app.use("/api/v1/master-data", masterDataRoutes);
 app.use("/api/v1", advertisementsRoutes);
 app.use("/api/v1", noticesRoutes);
 app.use("/api/v1", helpQueryRoutes);
+app.use("/api/v1", candidatesRoutes);
+app.use("/api/v1", applicationsRoutes);
+app.use("/api/v1", feePaymentsRoutes);
+app.use("/api/v1", callLettersRoutes);
 
 console.log("✅ V1 API routes loaded");
 
