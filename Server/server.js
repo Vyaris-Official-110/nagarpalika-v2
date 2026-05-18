@@ -17,11 +17,10 @@ import {
   securityHeaders,
   additionalSecurityHeaders,
   getCorsConfig,
-  sanitizeErrors
+  sanitizeErrors,
 } from "./middlewares/securityHeaders.js";
-import {
-  mongoSanitizer
-} from "./middlewares/inputValidator.js";
+import { mongoSanitizer } from "./middlewares/inputValidator.js";
+import { tenantMiddleware } from "./middlewares/tenantMiddleware.js";
 
 // ES6 module equivalent of __dirname and __filename
 const __filename = fileURLToPath(import.meta.url);
@@ -99,27 +98,34 @@ app.use(mongoSanitizer);
 // 6. HTTP Parameter Pollution Prevention
 app.use(hpp());
 
-// 7. Express Session - MongoDB Session Storage (persistent)
+// 7. Tenant isolation — attaches req.tenantId from subdomain/header
+app.use(tenantMiddleware);
+
+// 8. Express Session - MongoDB Session Storage (persistent)
 import MongoStore from "connect-mongo";
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-in-production',
-  resave: false,
-  saveUninitialized: false,
-  name: 'sessionId',
-  store: MongoStore.create({
-    mongoUrl: process.env.DATABASE,
-    collectionName: 'sessions',
-    ttl: 24 * 60 * 60, // 24 hours in seconds
-    autoRemove: 'native', // Use MongoDB TTL index for cleanup
+app.use(
+  session({
+    secret:
+      process.env.SESSION_SECRET ||
+      "your-super-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    name: "sessionId",
+    store: MongoStore.create({
+      mongoUrl: process.env.DATABASE,
+      collectionName: "sessions",
+      ttl: 24 * 60 * 60, // 24 hours in seconds
+      autoRemove: "native", // Use MongoDB TTL index for cleanup
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      httpOnly: true, // Prevents XSS attacks
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: "lax", // CSRF protection
+    },
   }),
-  cookie: {
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    httpOnly: true, // Prevents XSS attacks
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax' // CSRF protection
-  }
-}));
+);
 
 console.log("✅ Express session middleware configured (MongoDB storage)");
 
@@ -183,6 +189,7 @@ import otpRoutes from "./routes/v1/otp.routes.js";
 import masterDataRoutes from "./routes/v1/masterData.routes.js";
 import analyticsRoutes from "./routes/v1/analytics.routes.js";
 import whatsappRoutes from "./routes/v1/whatsapp.routes.js";
+import advertisementsRoutes from "./routes/v1/advertisements.routes.js";
 
 app.use("/api/v1", companiesRoutes);
 app.use("/api/v1", departmentsRoutes);
@@ -196,6 +203,7 @@ app.use("/api/v1", analyticsRoutes);
 app.use("/api/v1", whatsappRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/master-data", masterDataRoutes);
+app.use("/api/v1", advertisementsRoutes);
 
 console.log("✅ V1 API routes loaded");
 
@@ -229,13 +237,13 @@ app.use(async (err, req, res, _next) => {
     method: req?.method,
     ip: req?.ip,
     // Don't log full stack trace to file in production
-    stack: process.env.NODE_ENV === 'development' ? err?.stack : undefined,
+    stack: process.env.NODE_ENV === "development" ? err?.stack : undefined,
   };
 
   try {
     let writecontent = [];
     if (fs.existsSync("log/error.html")) {
-      const filedata = fs.readFileSync("log/error.html", 'utf8');
+      const filedata = fs.readFileSync("log/error.html", "utf8");
       if (filedata) {
         try {
           writecontent = JSON.parse(filedata);
@@ -257,12 +265,12 @@ app.use(async (err, req, res, _next) => {
   }
 
   // SECURITY: Don't expose internal error details to users
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = process.env.NODE_ENV === "production";
   return res.status(500).json({
     isOk: false,
     status: 500,
-    error: 'Internal Server Error',
-    message: isProduction ? 'An unexpected error occurred' : err?.message,
+    error: "Internal Server Error",
+    message: isProduction ? "An unexpected error occurred" : err?.message,
   });
 });
 
@@ -270,5 +278,7 @@ const port = process.env.PORT || 8000;
 
 app.listen(port, () => {
   console.log(`✅ Server is running on port ${port}`);
-  console.log(`🔒 Security middleware enabled: Helmet, Input Validation, CSRF Protection`);
+  console.log(
+    `🔒 Security middleware enabled: Helmet, Input Validation, CSRF Protection`,
+  );
 });
