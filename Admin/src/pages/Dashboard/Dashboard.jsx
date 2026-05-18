@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   Container, Row, Col, Card, CardBody, CardHeader,
-  Badge, Spinner, Button,
+  Spinner, Button,
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
@@ -61,10 +61,8 @@ const dashboardStyles = `
   font-family: var(--vy-font-mono, 'JetBrains Mono', monospace);
   font-size: 12px;
   margin-top: 6px;
+  color: var(--vy-fg-3, #8E918A);
 }
-.vy-dashboard .vy-metric-delta.up { color: #4FAB5A; }
-.vy-dashboard .vy-metric-delta.down { color: var(--vy-danger, #FF6A55); }
-.vy-dashboard .vy-metric-delta.flat { color: var(--vy-fg-3, #8E918A); }
 
 .vy-dashboard .vy-icon-square {
   width: 36px; height: 36px;
@@ -96,26 +94,9 @@ const dashboardStyles = `
 .vy-dashboard .btn { font-family: var(--vy-font-display, 'Barlow', sans-serif); }
 `;
 
-const statusColors = {
-  scheduled: "primary",
-  confirmed: "info",
-  arrived: "warning",
-  in_consultation: "secondary",
-  completed: "success",
-  checked_out: "dark",
-  cancelled: "danger",
-  no_show: "danger",
-};
-
 const formatCurrency = (n) => {
   if (n == null) return "₹0";
   return `₹${Number(n).toLocaleString("en-IN")}`;
-};
-
-const formatDate = (d) => {
-  if (!d) return "-";
-  const dt = new Date(d);
-  return dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
 };
 
 const Dashboard = () => {
@@ -146,57 +127,32 @@ const Dashboard = () => {
 
   document.title = `Dashboard · ${adminData?.companyName}`;
 
-  const todayAppts = stats?.todaysAppointments || { total: 0, byStatus: {} };
-  const revenueThisMonth = stats?.revenueThisMonth || 0;
-  const revenueLastMonth = stats?.revenueLastMonth || 0;
-  const revChange = revenueLastMonth > 0
-    ? (((revenueThisMonth - revenueLastMonth) / revenueLastMonth) * 100).toFixed(1)
-    : revenueThisMonth > 0 ? 100 : 0;
-
   const widgets = [
     {
-      title: "Today's appointments",
-      value: todayAppts.total,
-      icon: "ri-calendar-check-line",
+      title: "Active advertisements",
+      value: stats?.activeAdvertisements ?? 0,
+      icon: "ri-megaphone-line",
       accent: true,
-      onClick: () => navigate("/appointments"),
+      onClick: () => navigate("/advertisement"),
     },
     {
-      title: "Patients this month",
-      value: stats?.patientsThisMonth || 0,
-      icon: "ri-user-heart-line",
-      onClick: () => navigate("/patients"),
+      title: "Total candidates",
+      value: stats?.totalCandidates ?? 0,
+      icon: "ri-user-3-line",
+      onClick: () => navigate("/candidates"),
     },
     {
-      title: "Revenue this month",
-      value: formatCurrency(revenueThisMonth),
+      title: "Total applications",
+      value: stats?.totalApplications ?? 0,
+      icon: "ri-file-list-3-line",
+      onClick: () => navigate("/applications"),
+    },
+    {
+      title: "Fees collected",
+      value: formatCurrency(stats?.totalFeesCollected),
       icon: "ri-money-rupee-circle-line",
-      delta: revenueLastMonth > 0
-        ? `${revChange >= 0 ? "▲ +" : "▼ "}${revChange}% vs last month`
-        : null,
-      deltaClass: revChange > 0 ? "up" : revChange < 0 ? "down" : "flat",
-    },
-    {
-      title: "Pending payments",
-      value: formatCurrency(stats?.pendingPayments?.totalAmount || 0),
-      icon: "ri-bank-card-line",
-      delta: `${stats?.pendingPayments?.count || 0} invoices`,
-      deltaClass: "flat",
-      onClick: () => navigate("/invoices"),
-    },
-  ];
-
-  const smallWidgets = [
-    {
-      title: "Patients this week",
-      value: stats?.patientsThisWeek || 0,
-      icon: "ri-user-add-line",
-    },
-    {
-      title: "Follow-ups pending",
-      value: stats?.followUpsPending || 0,
-      icon: "ri-phone-line",
-      onClick: () => navigate("/appointments"),
+      delta: "all time · successful payments",
+      onClick: () => navigate("/fee-payments"),
     },
   ];
 
@@ -216,7 +172,7 @@ const Dashboard = () => {
                   {adminData?.employeeName || adminData?.companyName}
                 </span>
               </h1>
-              <p className="vy-sub">Here's what's happening at your clinic today.</p>
+              <p className="vy-sub">Recruitment portal — {adminData?.companyName}</p>
             </Col>
             <Col xs="auto">
               <Button color="light" size="sm" onClick={fetchStats} disabled={loading}>
@@ -229,7 +185,7 @@ const Dashboard = () => {
             <div className="text-center py-5"><Spinner color="primary" /></div>
           ) : (
             <>
-              <Row>
+              <Row className="mb-4">
                 {widgets.map((w, i) => (
                   <Col md={6} xl={3} key={i}>
                     <Card
@@ -243,7 +199,7 @@ const Dashboard = () => {
                             <p className="vy-eyebrow">{w.title}</p>
                             <h2 className="vy-metric-num">{w.value}</h2>
                             {w.delta && (
-                              <p className={`vy-metric-delta ${w.deltaClass || ""}`}>{w.delta}</p>
+                              <p className="vy-metric-delta">{w.delta}</p>
                             )}
                           </div>
                           <div className={`vy-icon-square ${w.accent ? "accent" : ""}`}>
@@ -257,136 +213,98 @@ const Dashboard = () => {
               </Row>
 
               <Row>
-                {smallWidgets.map((w, i) => (
-                  <Col md={3} key={i}>
-                    <Card
-                      className="card-animate"
-                      style={{ cursor: w.onClick ? "pointer" : "default" }}
-                      onClick={w.onClick}
-                    >
-                      <CardBody className="py-3">
-                        <div className="d-flex align-items-center">
-                          <div className="vy-icon-square me-3">
-                            <i className={w.icon}></i>
-                          </div>
-                          <div>
-                            <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>{w.title}</p>
-                            <h5 className="mb-0" style={{ fontFamily: "var(--vy-font-display)", fontWeight: 700, color: "var(--vy-ink)" }}>
-                              {w.value}
-                            </h5>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </Col>
-                ))}
-
-                <Col md={3}>
-                  <Card>
-                    <CardBody className="py-3">
-                      <div className="d-flex align-items-center">
-                        <div className="vy-icon-square me-3">
-                          <i className="ri-exchange-line"></i>
-                        </div>
-                        <div>
-                          <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>Last month revenue</p>
-                          <h5 className="mb-0" style={{ fontFamily: "var(--vy-font-display)", fontWeight: 700, color: "var(--vy-ink)" }}>
-                            {formatCurrency(revenueLastMonth)}
-                          </h5>
-                        </div>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </Col>
-
-                <Col md={3}>
-                  <Card>
-                    <CardBody className="py-3">
-                      <p className="vy-eyebrow mb-2" style={{ fontSize: 10 }}>Quick actions</p>
-                      <div className="d-flex gap-2 flex-wrap">
-                        <Button color="primary" size="sm" onClick={() => navigate("/appointments/add")}>
-                          <i className="ri-add-line me-1"></i>Appointment
-                        </Button>
-                        <Button color="light" size="sm" onClick={() => navigate("/patients/new")}>
-                          <i className="ri-user-add-line me-1"></i>Patient
-                        </Button>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </Col>
-              </Row>
-
-              <Row>
-                <Col xl={8}>
-                  <Card>
-                    <CardHeader className="d-flex justify-content-between align-items-center">
-                      <h6 className="card-title">
-                        <i className="ri-calendar-line me-2"></i>Today's appointments
-                      </h6>
-                      <Button color="light" size="sm" onClick={() => navigate("/appointments")}>
-                        View schedule
-                      </Button>
-                    </CardHeader>
-                    <CardBody>
-                      {todayAppts.total === 0 ? (
-                        <div className="text-center text-muted py-4">
-                          <i className="ri-calendar-line" style={{ fontSize: "40px", opacity: 0.3 }}></i>
-                          <p className="mt-2 mb-0">No appointments scheduled for today.</p>
-                        </div>
-                      ) : (
-                        <Row>
-                          {Object.entries(todayAppts.byStatus || {}).map(([status, count]) => {
-                            if (count === 0) return null;
-                            return (
-                              <Col xs={6} sm={4} md={3} key={status} className="mb-3">
-                                <div className="d-flex align-items-center gap-2">
-                                  <Badge color={statusColors[status] || "secondary"} className="text-capitalize" style={{ fontSize: "10px", minWidth: "80px" }}>
-                                    {status.replace(/_/g, " ")}
-                                  </Badge>
-                                  <span className="fw-semibold" style={{ fontFamily: "var(--vy-font-mono)", color: "var(--vy-ink)" }}>{count}</span>
-                                </div>
-                              </Col>
-                            );
-                          })}
-                        </Row>
-                      )}
-                    </CardBody>
-                  </Card>
-                </Col>
-
-                <Col xl={4}>
+                <Col md={6} xl={4}>
                   <Card>
                     <CardHeader>
                       <h6 className="card-title">
-                        <i className="ri-cake-2-line me-2"></i>Upcoming birthdays · 7d
+                        <i className="ri-flashlight-line me-2"></i>Quick actions
                       </h6>
                     </CardHeader>
-                    <CardBody style={{ maxHeight: "280px", overflowY: "auto" }}>
-                      {!stats?.upcomingBirthdays || stats.upcomingBirthdays.length === 0 ? (
-                        <div className="text-center text-muted py-3">
-                          <i className="ri-cake-2-line" style={{ fontSize: "32px", opacity: 0.3 }}></i>
-                          <p className="mt-2 mb-0">No upcoming birthdays.</p>
-                        </div>
-                      ) : (
-                        <div className="vstack gap-3">
-                          {stats.upcomingBirthdays.map((p, i) => (
-                            <div key={i} className="d-flex align-items-center">
-                              <div className="vy-icon-square me-3">
-                                <span style={{ fontWeight: 700 }}>{(p.firstName || "?")[0]}</span>
-                              </div>
-                              <div className="flex-grow-1">
-                                <h6 className="mb-0" style={{ fontSize: "13px", color: "var(--vy-ink)" }}>
-                                  {p.firstName} {p.lastName}
-                                </h6>
-                                <small className="text-muted">{p.mobileNumber}</small>
-                              </div>
-                              <Badge color="warning" style={{ fontSize: "10px" }}>
-                                {formatDate(p.dateOfBirth)}
-                              </Badge>
+                    <CardBody>
+                      <div className="vstack gap-2">
+                        <Button color="primary" onClick={() => navigate("/advertisement/add")}>
+                          <i className="ri-add-line me-2"></i>New Advertisement
+                        </Button>
+                        <Button color="light" onClick={() => navigate("/notice/add")}>
+                          <i className="ri-notification-3-line me-2"></i>Post Notice
+                        </Button>
+                        <Button color="light" onClick={() => navigate("/candidates")}>
+                          <i className="ri-user-3-line me-2"></i>View Candidates
+                        </Button>
+                        <Button color="light" onClick={() => navigate("/applications")}>
+                          <i className="ri-file-list-3-line me-2"></i>View Applications
+                        </Button>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </Col>
+
+                <Col md={6} xl={8}>
+                  <Card>
+                    <CardHeader>
+                      <h6 className="card-title">
+                        <i className="ri-information-line me-2"></i>Portal status
+                      </h6>
+                    </CardHeader>
+                    <CardBody>
+                      <Row>
+                        <Col sm={6} className="mb-3">
+                          <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>Fee payments</p>
+                          <div
+                            className="d-flex align-items-center gap-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigate("/fee-payments")}
+                          >
+                            <div className="vy-icon-square">
+                              <i className="ri-bank-card-line"></i>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            <span style={{ fontFamily: "var(--vy-font-display)", fontWeight: 700, color: "var(--vy-ink)", fontSize: 20 }}>
+                              {formatCurrency(stats?.totalFeesCollected)}
+                            </span>
+                          </div>
+                        </Col>
+                        <Col sm={6} className="mb-3">
+                          <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>Call letters</p>
+                          <div
+                            className="d-flex align-items-center gap-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigate("/call-letters")}
+                          >
+                            <div className="vy-icon-square">
+                              <i className="ri-mail-check-line"></i>
+                            </div>
+                            <span style={{ fontFamily: "var(--vy-font-display)", fontWeight: 600, color: "var(--vy-fg-2)", fontSize: 14 }}>
+                              Manage &rarr;
+                            </span>
+                          </div>
+                        </Col>
+                        <Col sm={6}>
+                          <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>Notices &amp; circulars</p>
+                          <div
+                            className="d-flex align-items-center gap-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => navigate("/notice")}
+                          >
+                            <div className="vy-icon-square">
+                              <i className="ri-notification-3-line"></i>
+                            </div>
+                            <span style={{ fontFamily: "var(--vy-font-display)", fontWeight: 600, color: "var(--vy-fg-2)", fontSize: 14 }}>
+                              Manage &rarr;
+                            </span>
+                          </div>
+                        </Col>
+                        <Col sm={6}>
+                          <p className="vy-eyebrow mb-1" style={{ fontSize: 10 }}>Help queries</p>
+                          <div className="d-flex align-items-center gap-2">
+                            <div className="vy-icon-square">
+                              <i className="ri-question-answer-line"></i>
+                            </div>
+                            <span style={{ fontFamily: "var(--vy-font-display)", fontWeight: 600, color: "var(--vy-fg-2)", fontSize: 14 }}>
+                              Inbox
+                            </span>
+                          </div>
+                        </Col>
+                      </Row>
                     </CardBody>
                   </Card>
                 </Col>

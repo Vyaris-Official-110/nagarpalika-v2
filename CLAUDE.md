@@ -60,7 +60,7 @@ nagarpalika-v2/
 | P4 · Application | 🔴 Not started | Apply flow + edit window + print PDF | **Q#8: form fields unresolved (HARD BLOCK)** |
 | P5 · Fee Payment | 🔴 Not started | Payment gateway adapter + webhook HMAC + PDF receipt | Q#2 (online-only?), Q#7 (gateway choice), contract not signed |
 | P6 · Call Letter | 🔴 Not started | Eligibility check + signed download token + admit card PDF | Depends on P4, P5 |
-| P7 · Admin Panel | 🟡 Partial | Build 6 recruitment pages: Advertisement, Candidates, Applications, Fee, CallLetter, Notices | Q#4 (shared/separate admin credentials?) |
+| P7 · Admin Panel | 🟢 Done | All 6 recruitment pages shipped (Advertisements CRUD, Candidates, Applications, FeePayments, CallLetters, Notices). Controllers + routes for candidates/applications/feePayments/callLetters. Dashboard replaced with recruitment stats. Analytics controller updated. | — |
 | P8 · Notifications | 🟡 Partial | Recruitment event triggers + SMS fallback + UIDAI OTP wiring + email service | **Q#9: WhatsApp BSP not registered (HARD BLOCK)** |
 | P9 · Security/Pentest | 🔴 Not started | Hardening checklist per PRD §9 + pentest scope + remediation SLA | Depends on P1–P8 |
 
