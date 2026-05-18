@@ -190,6 +190,8 @@ import masterDataRoutes from "./routes/v1/masterData.routes.js";
 import analyticsRoutes from "./routes/v1/analytics.routes.js";
 import whatsappRoutes from "./routes/v1/whatsapp.routes.js";
 import advertisementsRoutes from "./routes/v1/advertisements.routes.js";
+import noticesRoutes from "./routes/v1/notices.routes.js";
+import helpQueryRoutes from "./routes/v1/helpQuery.routes.js";
 
 app.use("/api/v1", companiesRoutes);
 app.use("/api/v1", departmentsRoutes);
@@ -204,6 +206,8 @@ app.use("/api/v1", whatsappRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/master-data", masterDataRoutes);
 app.use("/api/v1", advertisementsRoutes);
+app.use("/api/v1", noticesRoutes);
+app.use("/api/v1", helpQueryRoutes);
 
 console.log("✅ V1 API routes loaded");
 

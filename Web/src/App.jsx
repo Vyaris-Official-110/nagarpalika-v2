@@ -9,6 +9,7 @@ import Notices from './pages/Notices'
 import Results from './pages/Results'
 import CallLetter from './pages/CallLetter'
 import Contact from './pages/Contact'
+import Help from './pages/Help'
 
 function Layout({ children }) {
   return (
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/results"    element={<Layout><Results /></Layout>} />
           <Route path="/callletter" element={<Layout><CallLetter /></Layout>} />
           <Route path="/contact"    element={<Layout><Contact /></Layout>} />
+          <Route path="/help"       element={<Layout><Help /></Layout>} />
         </Routes>
       </BrowserRouter>
     </LangProvider>

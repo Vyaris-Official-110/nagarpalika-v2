@@ -1,19 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLang } from '../context/LangContext'
-import { JOBS } from '../data/jobs'
+import { getAdvertisements } from '../api/index'
 
-const STATUS_LABEL = { urgent: 'Closing Soon', new: 'New', closed: 'Closed', active: 'Active' }
+const STATUS_LABEL = { published: 'Active', closed: 'Closed', draft: 'Draft' }
+const STATUS_CSS   = { published: 'active', closed: 'closed', draft: 'new' }
 
 export default function Careers() {
   const { t } = useLang()
   const [filter, setFilter] = useState('all')
+  const [jobs, setJobs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const visible = filter === 'all' ? JOBS : JOBS.filter(j => j.cls === filter)
+  useEffect(() => {
+    getAdvertisements()
+      .then(res => setJobs(res.data?.data ?? []))
+      .catch(() => setError('Could not load advertisements. Please try again later.'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const visible = filter === 'all' ? jobs : jobs.filter(j => j.postClass === filter)
   const counts = {
-    all: JOBS.length,
-    I:   JOBS.filter(j => j.cls === 'I').length,
-    II:  JOBS.filter(j => j.cls === 'II').length,
-    III: JOBS.filter(j => j.cls === 'III').length,
+    all: jobs.length,
+    I:   jobs.filter(j => j.postClass === 'I').length,
+    II:  jobs.filter(j => j.postClass === 'II').length,
+    III: jobs.filter(j => j.postClass === 'III').length,
   }
 
   const FILTERS = [
@@ -62,48 +73,57 @@ export default function Careers() {
 
       <div className="box">
         <div className="box-title">
-          <span>Open Positions — Department of Urban Development</span>
-          <span className="guj">શહેરી વિકાસ વિભાગ — ખાલી જગ્યાઓ</span>
+          <span>Open Positions</span>
+          <span className="guj">ખાલી જગ્યાઓ</span>
         </div>
-        <table className="ojas">
-          <thead>
-            <tr>
-              <th style={{ width: 36 }}>Sr.</th>
-              <th style={{ width: 110 }}>Advt. No.</th>
-              <th>Name of Post</th>
-              <th style={{ width: 90 }}>Class</th>
-              <th style={{ width: 60 }}>Posts</th>
-              <th style={{ width: 70 }}>Fee</th>
-              <th style={{ width: 90 }}>Last Date</th>
-              <th style={{ width: 110 }}>Status</th>
-              <th style={{ width: 90 }}>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((j, i) => (
-              <tr key={j.id}>
-                <td>{i + 1}</td>
-                <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>{j.id}</td>
-                <td>
-                  <a href="#">{j.title}</a>
-                  <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)', marginTop: 2 }}>{j.dept}</div>
-                  <div style={{ fontSize: 11, color: 'var(--ojas-ink-2)', marginTop: 2 }}>Pay: {j.scale}</div>
-                </td>
-                <td style={{ fontWeight: 700 }}>{j.cls}</td>
-                <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--ojas-navy)' }}>{j.posts}</td>
-                <td>{j.fee}</td>
-                <td style={{ color: j.status === 'urgent' ? 'var(--ojas-red)' : 'inherit', fontWeight: j.status === 'urgent' ? 700 : 400 }}>{j.last}</td>
-                <td><span className={`badge ${j.status}`}>{STATUS_LABEL[j.status]}</span></td>
-                <td>
-                  <a href="#" style={{ color: 'var(--ojas-saffron-deep)', fontWeight: 700 }}>{t('car.apply')}</a>
-                </td>
+        {loading && <div style={{ padding: '24px', textAlign: 'center', color: 'var(--ojas-ink-3)' }}>Loading…</div>}
+        {error   && <div className="notice info" style={{ margin: '8px 0' }}><span>{error}</span></div>}
+        {!loading && !error && (
+          <table className="ojas">
+            <thead>
+              <tr>
+                <th style={{ width: 36 }}>Sr.</th>
+                <th style={{ width: 110 }}>Advt. No.</th>
+                <th>Name of Post</th>
+                <th style={{ width: 90 }}>Class</th>
+                <th style={{ width: 60 }}>Posts</th>
+                <th style={{ width: 70 }}>Fee</th>
+                <th style={{ width: 100 }}>Last Date</th>
+                <th style={{ width: 110 }}>Status</th>
+                <th style={{ width: 90 }}>Action</th>
               </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: 'var(--ojas-ink-3)', fontStyle: 'italic' }}>No positions match this filter.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {visible.map((j, i) => {
+                const endDate = j.endDate ? new Date(j.endDate).toLocaleDateString('en-IN') : '—'
+                return (
+                  <tr key={j._id}>
+                    <td>{i + 1}</td>
+                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: 11.5 }}>{j.advtNo}</td>
+                    <td>
+                      <a href="#">{j.postTitle}</a>
+                      {j.departmentId?.departmentName && (
+                        <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)', marginTop: 2 }}>{j.departmentId.departmentName}</div>
+                      )}
+                      <div style={{ fontSize: 11, color: 'var(--ojas-ink-2)', marginTop: 2 }}>Pay: {j.payScale}</div>
+                    </td>
+                    <td style={{ fontWeight: 700 }}>{j.postClass}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--ojas-navy)' }}>{j.vacancies}</td>
+                    <td>₹{j.applicationFee}</td>
+                    <td>{endDate}</td>
+                    <td><span className={`badge ${STATUS_CSS[j.status] ?? j.status}`}>{STATUS_LABEL[j.status] ?? j.status}</span></td>
+                    <td>
+                      <a href="#" style={{ color: 'var(--ojas-saffron-deep)', fontWeight: 700 }}>{t('car.apply')}</a>
+                    </td>
+                  </tr>
+                )
+              })}
+              {visible.length === 0 && (
+                <tr><td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: 'var(--ojas-ink-3)', fontStyle: 'italic' }}>No positions match this filter.</td></tr>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div style={{ marginTop: 12, fontSize: 11.5, color: 'var(--ojas-ink-3)', textAlign: 'center' }}>
