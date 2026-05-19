@@ -75,47 +75,27 @@ cd nagarpalika-v2
 
 ### 2. Environment variables
 
-**Server** (`Server/.env`):
+Each app requires a `.env` file. Copy the `.env.example` provided in each directory and fill in your values.
 
-```env
-DATABASE=mongodb://localhost:27017/nagarpalika
-PORT=8000
-NODE_ENV=development
-SESSION_SECRET=your-long-random-secret
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+**Server** (`Server/.env`) — required groups:
 
-# Payment gateway (P5 — not yet integrated)
-PAYMENT_GATEWAY_KEY=
-PAYMENT_GATEWAY_SECRET=
+| Group | Variables needed |
+|-------|-----------------|
+| Database | MongoDB connection URI, port |
+| App | Node environment, session secret, allowed CORS origins |
+| Payment gateway | API key + secret (P5 — not yet integrated) |
+| Aadhaar / UIDAI | AUA credentials (P3 — requires UIDAI empanelment) |
+| WhatsApp | Meta Cloud API credentials (P8) |
+| Email | SMTP host, port, credentials |
 
-# UIDAI Aadhaar OTP (P3 — requires empanelment)
-UIDAI_AUA_CODE=
-UIDAI_LICENSE_KEY=
+**Web & Admin** (`Web/.env`, `Admin/.env`) — required:
 
-# WhatsApp — Meta Cloud API v21.0 (P8)
-WHATSAPP_ACCESS_TOKEN=
-WHATSAPP_PHONE_NUMBER_ID=
+| Variable | Value |
+|----------|-------|
+| API base URL | URL of the running Server instance |
+| App name | Display name shown in the UI |
 
-# Email — SMTP
-SMTP_HOST=
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASS=
-```
-
-**Web** (`Web/.env`):
-
-```env
-VITE_API_URL=http://localhost:8000
-VITE_APP_NAME=Nagar Palika Recruitment Portal
-```
-
-**Admin** (`Admin/.env`):
-
-```env
-VITE_API_URL=http://localhost:8000
-VITE_APP_NAME=Nagar Palika Admin
-```
+> **Never commit `.env` files.** They are gitignored. See the [Security](#security) section.
 
 ### 3. Install and run
 
@@ -205,13 +185,190 @@ Full documentation available at `/api-docs` when `NODE_ENV=development`.
 
 ## Security
 
-Security baseline implemented:
+### Repository — What Must Never Be Committed
+
+**Never commit these files.** Verify `.gitignore` covers all of them:
+
+```
+# Secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Uploads (contain citizen PII — photos, signatures, PDFs)
+Server/uploads/
+Server/out/
+
+# Logs
+Server/log/
+
+# Build artifacts
+**/dist/
+**/build/
+Admin/build/
+```
+
+Before any push, scan for accidental secrets:
+
+```bash
+git diff --cached | grep -iE "(password|secret|token|key|aadhaar|DATABASE=mongodb)" 
+```
+
+If a secret was committed and pushed — **rotate it immediately**. Removing from history is not enough if the commit was ever pushed.
+
+### Environment Variables
+
+- **Never hardcode** secrets, connection strings, or API keys in source code.
+- All secrets live in `.env` files — which are gitignored.
+- For production: use a secrets manager (AWS Secrets Manager, HashiCorp Vault, or the hosting provider's env var injection) instead of `.env` files on disk.
+- `SESSION_SECRET` must be at least 64 random characters. Generate with:
+  ```bash
+  node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+  ```
+- Rotate all secrets if a `.env` file is ever accidentally committed or shared.
+
+### MongoDB Hardening
+
+Do not run MongoDB with default settings in production:
+
+```bash
+# 1. Enable authentication (mongod.conf)
+security:
+  authorization: enabled
+
+# 2. Bind to localhost only — never expose port 27017 to the internet
+net:
+  bindIp: 127.0.0.1
+
+# 3. Create a dedicated DB user with least-privilege access
+db.createUser({
+  user: "nagarpalika_app",
+  pwd: "<strong-random-password>",
+  roles: [{ role: "readWrite", db: "nagarpalika" }]
+})
+
+# 4. Use connection string with credentials
+DATABASE=mongodb://nagarpalika_app:<password>@127.0.0.1:27017/nagarpalika
+```
+
+- Never use the `root` or `admin` user in the application connection string.
+- Enable MongoDB audit logging in production.
+- Take daily backups — the `knowledge_base/` SRS requires 30-day retention.
+
+### Server / OS Hardening
+
+```bash
+# Disable password-based SSH — keys only
+PasswordAuthentication no
+
+# Firewall: expose only what's needed
+ufw allow 22/tcp      # SSH
+ufw allow 80/tcp      # HTTP → redirect to HTTPS
+ufw allow 443/tcp     # HTTPS
+ufw deny 27017/tcp    # MongoDB — never public
+ufw deny 8000/tcp     # Express — sit behind nginx, not directly exposed
+ufw enable
+
+# Run Node as a non-root user
+useradd -m nagarpalika
+# Run the app as this user via PM2 or systemd
+```
+
+- Keep OS and Node.js patched. Subscribe to Node.js security advisories.
+- Use `pm2` or `systemd` to manage the process — never run with `sudo node`.
+
+### HTTPS / nginx
+
+Terminate TLS at nginx. Never expose Express directly on port 443:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name patan.domain.gov.in palanpur.domain.gov.in;
+
+    ssl_certificate     /etc/letsencrypt/live/domain.gov.in/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/domain.gov.in/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+# Redirect HTTP → HTTPS
+server {
+    listen 80;
+    return 301 https://$host$request_uri;
+}
+```
+
+### Admin Panel Access
+
+- IP-whitelist `/out/admin/` and all `/api/v1/auth/` admin routes in nginx.
+- The SRS requires admin panel to be accessible only from municipal office IPs.
+- Enable admin 2FA before go-live (P9 hardening task).
+
+### Sensitive Data in the Codebase
+
+| Data | Where | Protection |
+|------|-------|-----------|
+| Aadhaar numbers | `Candidate.aadhaarHash` | SHA-256 hash only — raw number never stored |
+| Citizen photos/signatures | `Server/uploads/` | UUID filenames, not guessable; serve via authenticated route |
+| Session tokens | Express session store (MongoDB) | HttpOnly + Secure cookies; never in URL or logs |
+| Payment transaction IDs | `FeePayment.gatewayTxnId` | Stored, never logged to console |
+| OTPs | `Otp` model (MongoDB TTL) | 10-minute auto-expiry; never returned in API responses |
+
+**Never log PII.** Morgan request logs must not include request bodies. Verify:
+
+```javascript
+// server.js — safe: logs method + URL only, not body
+app.use(morgan('dev'));
+```
+
+### Dependency Security
+
+```bash
+# Audit all three packages
+cd Server && npm audit
+cd Web && npm audit  
+cd Admin && npm audit
+
+# Fix automatically where safe
+npm audit fix
+```
+
+Run `npm audit` before every production deployment. Do not ignore HIGH or CRITICAL advisories.
+
+### Production Go-Live Checklist
+
+- [ ] All `.env` files gitignored and not on any public server
+- [ ] `NODE_ENV=production` set (disables Swagger, enables secure cookies)
+- [ ] MongoDB auth enabled, port 27017 firewalled
+- [ ] HTTPS enforced, HTTP redirects to HTTPS
+- [ ] Admin panel IP-whitelisted in nginx
+- [ ] `SESSION_SECRET` is 64+ random characters
+- [ ] `npm audit` shows no HIGH/CRITICAL issues
+- [ ] Swagger UI disabled (automatic when `NODE_ENV=production`)
+- [ ] File upload directory (`Server/uploads/`) not web-accessible directly
+- [ ] Daily backup cron configured with 30-day retention
+- [ ] Error responses do not include stack traces (automatic in production mode)
+- [ ] P9 security pentest completed and remediation signed off
+
+### Implemented Security Features (Codebase)
 
 - bcrypt password hashing
 - HttpOnly session cookies (SameSite, Secure flags)
 - Magic byte file type validation (`file-type` library)
 - UUID-based filenames + Sharp → WebP compression
-- express-validator input sanitization
+- express-validator input sanitization on all routes
 - express-mongo-sanitize (NoSQL injection prevention)
 - HTTP Parameter Pollution protection
 - Rate limiting on all endpoints
