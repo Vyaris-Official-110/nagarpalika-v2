@@ -28,7 +28,7 @@ async function sendRaw(phone, message) {
 export const sendSmsOtp = (phone, otp) =>
   sendRaw(
     phone,
-    `Your NagarPalika OTR verification code is ${otp}. Valid for 5 minutes. Do not share.`
+    `Your NagarPalika OTR verification code is ${otp}. Valid for 5 minutes. Do not share.`,
   );
 
 export const sendSmsText = (phone, message) => sendRaw(phone, message);

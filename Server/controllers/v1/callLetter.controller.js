@@ -1,4 +1,70 @@
 import CallLetter from "../../models/CallLetter.js";
+import fs from "fs";
+
+/**
+ * Upload roll numbers via CSV — PRD §5.8.7
+ * CSV format: registrationId,rollNumber (one per line, with optional header)
+ */
+export const uploadRollNumbers = async (req, res) => {
+  try {
+    const { advt_no } = req.params;
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ isOk: false, message: "No CSV file uploaded", status: 400 });
+    }
+
+    const csvContent = fs.readFileSync(req.file.path, "utf8");
+    fs.unlinkSync(req.file.path); // remove temp file
+
+    const lines = csvContent.split(/\r?\n/).filter((l) => l.trim());
+    // Skip header if first line doesn't look like data
+    const dataLines = lines[0]?.toLowerCase().includes("registration")
+      ? lines.slice(1)
+      : lines;
+
+    const ops = [];
+    const errors = [];
+
+    for (const [i, line] of dataLines.entries()) {
+      const parts = line.split(",").map((p) => p.trim());
+      if (parts.length < 2) {
+        errors.push(`Line ${i + 2}: invalid format`);
+        continue;
+      }
+      const [registrationId, rollNumber] = parts;
+      if (!registrationId || !rollNumber) {
+        errors.push(`Line ${i + 2}: missing registrationId or rollNumber`);
+        continue;
+      }
+
+      ops.push({
+        updateOne: {
+          filter: { registrationId, advtNo: advt_no, tenantId: req.tenantId },
+          update: { $set: { rollNumber } },
+          upsert: true,
+        },
+      });
+    }
+
+    if (ops.length > 0) {
+      await CallLetter.bulkWrite(ops);
+    }
+
+    return res.status(200).json({
+      isOk: true,
+      message: `Processed ${ops.length} roll numbers`,
+      errors: errors.length > 0 ? errors : undefined,
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error in uploadRollNumbers:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
 
 export const listCallLetters = async (req, res) => {
   try {

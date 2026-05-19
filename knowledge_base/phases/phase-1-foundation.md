@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 1 of 9 |
-| **Status** | 🟢 Complete — infra + all 6 recruitment models + multi-tenant middleware + routes shipped |
+| **Status** | 🟢 Complete — infra + all 6 recruitment models + multi-tenant middleware + CSRF + admin 15-min timeout + 2FA + IP whitelist + bcrypt 12 all shipped |
 | **Depends On** | None |
 | **Blocks** | All other phases |
 | **PRD Sections** | §4 Deployment Architecture · §6 Data Model · §9.14 Infrastructure Security |
@@ -18,7 +18,7 @@ The HMS-to-recruitment migration left a solid foundation. These are DONE — do 
 |------|----------|
 | Express server + security middleware stack (Helmet, CORS, mongo-sanitize, HPP, rate-limit) | `Server/server.js` + `Server/middlewares/` |
 | MongoDB connection via Mongoose | `Server/server.js` |
-| Session auth (connect-mongo, HttpOnly, Secure, SameSite=Lax, 24h TTL) | `Server/server.js` |
+| Session auth (connect-mongo, HttpOnly, Secure, **SameSite=Strict**, 24h TTL) | `Server/server.js` |
 | Admin User model + full CRUD + login/logout/verify-session | `Server/models/Employee.js` + `Server/routes/v1/employees.routes.js` |
 | CompanyMaster model (Nagar Palika org config) | `Server/models/CompanyMaster.js` |
 | Department model + CRUD | `Server/models/Department.js` + `Server/routes/v1/departments.routes.js` |
@@ -35,23 +35,28 @@ The HMS-to-recruitment migration left a solid foundation. These are DONE — do 
 | Counter model (sequence/ID generation) | `Server/models/Counter.js` |
 | Seed scripts (recruitment master data + menu/role structure) | `Server/scripts/seedMasters.js`, `Server/scripts/seedMenusAndRoles.js` |
 | Swagger API docs (dev only, `/api-docs`) | `Server/config/swagger.js` |
+| **Multi-tenant middleware** (`tenantMiddleware.js`) | `Server/middlewares/tenantMiddleware.js` |
+| **CSRF double-submit cookie** (`csrfMiddleware.js`) | `Server/middlewares/csrfMiddleware.js` |
+| **Admin 15-min inactivity timeout** in `authMiddleware.js` | `Server/middlewares/authMiddleware.js` |
+| **Admin 2FA TOTP** (`setupTwoFactor`, `enableTwoFactor`) — otplib v12+ ESM | `Server/controllers/v1/employee.controller.js` |
+| **Admin IP whitelist** enforced in `authMiddleware.js` | `Server/middlewares/authMiddleware.js` |
+| **bcrypt cost 12** on all admin + candidate passwords | `Server/controllers/v1/employee.controller.js`, `otr.controller.js` |
+| **SiteConfig model** + config controller/routes | `Server/models/SiteConfig.js`, `controllers/v1/config.controller.js` |
 
 ---
 
 ## Remaining Work 🔴
 
-### 1. Multi-Tenant Middleware
-Two subdomains → isolated DB data per municipality. **No `tenant_id` exists on any model yet.**
+> **All P1 work is DONE.** Items below kept for historical reference only.
 
-- [ ] Middleware: resolve `tenant_id` from `Host` header at request time (e.g. `patan` vs `palanpur`)
-- [ ] Inject `tenant_id` into `req` — never read from request body
-- [ ] Reject unknown `Host` values with 400
-- [ ] Add `tenant_id` field (required, indexed) to all new recruitment models (§1.3 below)
-- [ ] Existing models (Employee, Dept, Menu, Role, Location, MasterData) can stay single-tenant for now — one admin panel serves both subdomains via staff accounts
+### 1. Multi-Tenant Middleware ✅ DONE
+- `tenantMiddleware.js` derives `req.tenantId` from Host header; rejects unknown hosts
+- All 6 recruitment models include `tenantId` (required, indexed)
+- Legacy admin models (Employee, Dept, Menu, Role) remain single-tenant — acceptable
 
-### 2. New Recruitment Models
+### 2. New Recruitment Models ✅ DONE
 
-Create these 6 models — none exist yet:
+All 6 models exist:
 
 #### `Advertisement.js`
 ```javascript

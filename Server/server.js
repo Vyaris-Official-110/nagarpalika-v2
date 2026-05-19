@@ -8,6 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import hpp from "hpp";
+import cookieParser from "cookie-parser";
 import session from "express-session";
 import { setupSwagger } from "./config/swagger.js";
 
@@ -21,6 +22,7 @@ import {
 } from "./middlewares/securityHeaders.js";
 import { mongoSanitizer } from "./middlewares/inputValidator.js";
 import { tenantMiddleware } from "./middlewares/tenantMiddleware.js";
+import { csrfMiddleware } from "./middlewares/csrfMiddleware.js";
 
 // ES6 module equivalent of __dirname and __filename
 const __filename = fileURLToPath(import.meta.url);
@@ -98,8 +100,14 @@ app.use(mongoSanitizer);
 // 6. HTTP Parameter Pollution Prevention
 app.use(hpp());
 
+// Parse cookies (required for CSRF double-submit)
+app.use(cookieParser());
+
 // 7. Tenant isolation — attaches req.tenantId from subdomain/header
 app.use(tenantMiddleware);
+
+// 8a. CSRF protection — double-submit cookie / custom header (PRD §9.7)
+app.use(csrfMiddleware);
 
 // 8. Express Session - MongoDB Session Storage (persistent)
 import MongoStore from "connect-mongo";
@@ -122,7 +130,7 @@ app.use(
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
       httpOnly: true, // Prevents XSS attacks
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: "lax", // CSRF protection
+      sameSite: "strict", // CSRF protection — PRD §9.1
     },
   }),
 );
@@ -197,6 +205,7 @@ import applicationsRoutes from "./routes/v1/applications.routes.js";
 import feePaymentsRoutes from "./routes/v1/feePayments.routes.js";
 import callLettersRoutes from "./routes/v1/callLetters.routes.js";
 import otrRoutes from "./routes/v1/otr.routes.js";
+import configRoutes from "./routes/v1/config.routes.js";
 
 app.use("/api/v1", companiesRoutes);
 app.use("/api/v1", departmentsRoutes);
@@ -218,6 +227,7 @@ app.use("/api/v1", applicationsRoutes);
 app.use("/api/v1", feePaymentsRoutes);
 app.use("/api/v1", callLettersRoutes);
 app.use("/api/v1", otrRoutes);
+app.use("/api/v1", configRoutes);
 
 console.log("✅ V1 API routes loaded");
 

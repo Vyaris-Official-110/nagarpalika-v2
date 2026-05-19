@@ -166,11 +166,11 @@ Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 |-------|------|-----------|--------|----------------|
 | 1 | [Foundation](phases/phase-1-foundation.md) | None | 🟢 Done | — |
 | 2 | [Public Frontend](phases/phase-2-public-frontend.md) | Phase 1 | 🟢 Done | — |
-| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🟢 Done | Mock Aadhaar (SHA-256, stub — swap when UIDAI AUA granted), 48h edit window, reCAPTCHA, bcrypt, brute-force lockout |
+| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🟢 Done | Mock Aadhaar stub (swap when UIDAI AUA granted); EditRegistration step 1 view-only; step 2 locked-field notes |
 | 4 | [Application](phases/phase-4-application.md) | Phase 3 | 🔴 Not Started | Apply flow + edit + print PDF — **HARD BLOCK: Q#8 form fields** |
 | 5 | [Fee Payment](phases/phase-5-fee-payment.md) | Phase 4 | 🔴 Not Started | Payment gateway adapter + webhook HMAC + receipts — blocked: Q#2, Q#7, contract |
 | 6 | [Call Letter](phases/phase-6-call-letter.md) | Phase 5, 7 | 🔴 Not Started | Eligibility check + signed download token — depends on P4, P5 |
-| 7 | [Admin Panel](phases/phase-7-admin-panel.md) | Phase 1 | 🟢 Done | — |
+| 7 | [Admin Panel](phases/phase-7-admin-panel.md) | Phase 1 | 🟢 Done | Bulk ZIP async export pending (blocked by P4); all other sub-modules shipped |
 | 8 | [Notifications](phases/phase-8-notifications.md) | Phase 3, 7 | 🟡 Partial | Recruitment event triggers + SMS fallback + UIDAI OTP wiring + email service — **HARD BLOCK: Q#9 WhatsApp BSP** |
 | 9 | [Security & Pentest](phases/phase-9-security-pentest.md) | All phases | 🔴 Not Started | Hardening checklist + pentest + remediation SLA — depends on P1–P8 |
 
@@ -216,4 +216,4 @@ When adding a new document:
 2. Add full entry under correct folder section
 3. Fill **Summary** (3–5 bullets), **Sections** table, **Tags**
 
-*Last updated: 2026-05-18*
+*Last updated: 2026-05-19*

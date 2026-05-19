@@ -13,9 +13,10 @@ import {
     deleteAdvertisement,
     publishAdvertisement,
     closeAdvertisement,
+    archiveAdvertisement,
 } from "../../api/advertisements.api";
 
-const STATUS_BADGE = { published: "success", closed: "secondary", draft: "warning" };
+const STATUS_BADGE = { published: "success", closed: "secondary", draft: "warning", archived: "dark" };
 
 const Advertisements = () => {
     const { adminData } = useContext(AuthContext);
@@ -75,6 +76,12 @@ const Advertisements = () => {
             .catch(() => toast.error("Close failed."));
     };
 
+    const handleArchive = (id) => {
+        archiveAdvertisement(id)
+            .then(() => { fetchData(); toast.success("Advertisement archived."); })
+            .catch(() => toast.error("Archive failed."));
+    };
+
     const col = [
         { name: "Sr", selector: (_, i) => i + 1, maxWidth: "50px" },
         { name: "Advt No", selector: (r) => r.advtNo, sortable: true, sortField: "advtNo", minWidth: "130px" },
@@ -106,6 +113,9 @@ const Advertisements = () => {
                     )}
                     {currentPagePermissions.edit && r.status === "published" && (
                         <button className="btn btn-sm btn-secondary" onClick={() => handleClose(r._id)}>Close</button>
+                    )}
+                    {currentPagePermissions.edit && r.status === "closed" && (
+                        <button className="btn btn-sm btn-dark" onClick={() => handleArchive(r._id)}>Archive</button>
                     )}
                     {currentPagePermissions.delete && r.status === "draft" && (
                         <button className="btn btn-sm btn-danger" onClick={() => { setModalDelete(true); setRemoveId(r._id); }}>Delete</button>

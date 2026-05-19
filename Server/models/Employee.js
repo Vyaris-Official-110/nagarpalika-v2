@@ -56,6 +56,15 @@ const EmployeeSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+
+    // 2FA — PRD §9.1, §5.8.1
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, default: "" }, // TOTP base32 secret
+    loginAttempts: { type: Number, default: 0 },
+    lockoutUntil: { type: Date },
+
+    // IP whitelist — PRD §5.8.1, §9.1 (empty = no restriction)
+    ipWhitelist: { type: [String], default: [] },
   },
   { timestamps: true },
 );

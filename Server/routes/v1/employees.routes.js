@@ -14,6 +14,8 @@ import {
   resetPassword,
   logoutUser,
   verifySession,
+  setupTwoFactor,
+  enableTwoFactor,
 } from "../../controllers/v1/employee.controller.js";
 import {
   loginValidation,
@@ -22,7 +24,7 @@ import {
   allowOnlyFields,
   allowedLoginFields,
   allowedEmployeeFields,
-  allowedSearchFields
+  allowedSearchFields,
 } from "../../middlewares/inputValidator.js";
 
 const router = express.Router();
@@ -47,11 +49,7 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.post(
-  "/employees",
-  authMiddleware(["ADMIN"]),
-  createEmployee,
-);
+router.post("/employees", authMiddleware(["ADMIN"]), createEmployee);
 
 /**
  * @swagger
@@ -136,11 +134,7 @@ router.get(
  *       404:
  *         description: Employee not found
  */
-router.put(
-  "/employees/:employeeId",
-  authMiddleware(["ADMIN"]),
-  updateEmployee,
-);
+router.put("/employees/:employeeId", authMiddleware(["ADMIN"]), updateEmployee);
 
 /**
  * @swagger
@@ -289,9 +283,9 @@ router.post(
 // SECURITY: Rate limit + field whitelist + input validation on login
 router.post(
   "/auth/employee/login",
-  allowOnlyFields(allowedLoginFields),      // Reject unexpected fields
-  loginValidation,                          // Validate & sanitize input
-  loginEmployee
+  allowOnlyFields(allowedLoginFields), // Reject unexpected fields
+  loginValidation, // Validate & sanitize input
+  loginEmployee,
 );
 
 /**
@@ -308,7 +302,11 @@ router.post(
  *       401:
  *         description: Unauthorized
  */
-router.get("/auth/me", authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]), getCurrentUser);
+router.get(
+  "/auth/me",
+  authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]),
+  getCurrentUser,
+);
 
 // ============ LOGOUT ROUTE ============
 
@@ -326,7 +324,11 @@ router.get("/auth/me", authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]), getCurre
  *       401:
  *         description: Unauthorized
  */
-router.post("/auth/logout", authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]), logoutUser);
+router.post(
+  "/auth/logout",
+  authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]),
+  logoutUser,
+);
 
 /**
  * @swagger
@@ -354,7 +356,11 @@ router.post("/auth/logout", authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]), log
  *       401:
  *         description: Session invalid or expired
  */
-router.get("/auth/verify-session", authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]), verifySession);
+router.get(
+  "/auth/verify-session",
+  authMiddleware(["ADMIN", "EMPLOYEE", "DOCTOR"]),
+  verifySession,
+);
 
 /**
  * @swagger
@@ -402,7 +408,8 @@ router.post(
       }
 
       const Employee = (await import("../../models/Employee.js")).default;
-      const CompanyMaster = (await import("../../models/CompanyMaster.js")).default;
+      const CompanyMaster = (await import("../../models/CompanyMaster.js"))
+        .default;
 
       let user = await Employee.findByIdAndUpdate(userId, { isActive: false });
       let userType = "Employee";
@@ -416,7 +423,9 @@ router.post(
             status: 403,
           });
         }
-        user = await CompanyMaster.findByIdAndUpdate(userId, { isActive: false });
+        user = await CompanyMaster.findByIdAndUpdate(userId, {
+          isActive: false,
+        });
         userType = "Company";
       }
 
@@ -441,7 +450,7 @@ router.post(
         status: 500,
       });
     }
-  }
+  },
 );
 
 /**
@@ -482,7 +491,8 @@ router.post(
       }
 
       const Employee = (await import("../../models/Employee.js")).default;
-      const CompanyMaster = (await import("../../models/CompanyMaster.js")).default;
+      const CompanyMaster = (await import("../../models/CompanyMaster.js"))
+        .default;
 
       let user = await Employee.findByIdAndUpdate(userId, { isActive: true });
       let userType = "Employee";
@@ -496,7 +506,9 @@ router.post(
             status: 403,
           });
         }
-        user = await CompanyMaster.findByIdAndUpdate(userId, { isActive: true });
+        user = await CompanyMaster.findByIdAndUpdate(userId, {
+          isActive: true,
+        });
         userType = "Company";
       }
 
@@ -521,8 +533,19 @@ router.post(
         status: 500,
       });
     }
-  }
+  },
+);
+
+// 2FA setup/enable — PRD §9.1, §5.8.1
+router.post(
+  "/auth/2fa/setup",
+  authMiddleware(["ADMIN", "SUPER_ADMIN", "DEPT_ADMIN", "EMPLOYEE"]),
+  setupTwoFactor,
+);
+router.post(
+  "/auth/2fa/enable",
+  authMiddleware(["ADMIN", "SUPER_ADMIN", "DEPT_ADMIN", "EMPLOYEE"]),
+  enableTwoFactor,
 );
 
 export default router;
-

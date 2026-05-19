@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 7 of 9 |
-| **Status** | 🟢 Complete (core sub-modules) — 6 recruitment pages + controllers + routes + dashboard shipped. Bulk ZIP export + CSV roll-number upload not yet built. |
+| **Status** | 🟢 Complete — 6 recruitment pages + controllers + routes + dashboard + admin 2FA UI + fee reconciliation + manual verify shipped. Bulk ZIP async export not yet built (blocked by P4). |
 | **Depends On** | Phase 1 (recruitment models must exist before pages can query them) |
 | **Blocks** | Phase 6 (call letter publish), Phase 8 (notifications use admin-managed data) |
 | **PRD Sections** | §5 M8 Administrator Panel · §9.1 Auth · §9.3 Authorization · §9.12 Audit Logging |
@@ -40,9 +40,11 @@
 | Analytics controller — real recruitment stats | `Server/controllers/v1/analytics.controller.js` |
 | Candidate controller + routes (search, getById, toggleStatus) | `Server/controllers/v1/candidate.controller.js` |
 | Application controller + routes (search, getById, updateStatus) | `Server/controllers/v1/application.controller.js` |
-| FeePayment controller + routes (search, getById — read-only) | `Server/controllers/v1/feePayment.controller.js` |
-| CallLetter controller + routes (search, getById, update) | `Server/controllers/v1/callLetter.controller.js` |
-| Server auth: 2FA-ready (OTP routes exist), IP whitelist config | `Server/middlewares/authMiddleware.js` |
+| FeePayment controller + routes (search, getById, feeReconciliationReport, manualVerifyFee) | `Server/controllers/v1/feePayment.controller.js` |
+| CallLetter controller + routes (search, getById, update, roll number CSV) | `Server/controllers/v1/callLetter.controller.js` |
+| Server auth: 2FA TOTP (otplib v12+), IP whitelist, 15-min inactivity timeout | `Server/middlewares/authMiddleware.js`, `employee.controller.js` |
+| Admin 2FA setup UI page | `Admin/src/pages/Setup/TwoFactorSetup.jsx` — shows 2FA status, QR setup, enable flow |
+| Admin `/2fa-setup` route registered | `Admin/src/Routes/allRoutes.jsx` |
 | Secure file upload | `Server/middlewares/secureUpload.js` |
 
 **Backend routes already mounted:**
@@ -52,7 +54,7 @@
 
 ## Remaining Work 🔴
 
-All 6 recruitment-specific admin sub-modules need to be built. These require Phase 1 models to exist first.
+> All 6 core sub-modules are DONE. Only async bulk ZIP export remains (blocked by P4 application data).
 
 ### 8.1 Advertisement Management
 

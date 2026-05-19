@@ -3,6 +3,7 @@ import {
   listCandidates,
   getCandidateById,
   toggleCandidateStatus,
+  exportCandidates,
 } from "../../controllers/v1/candidate.controller.js";
 import { authMiddleware } from "../../middlewares/authMiddleware.js";
 
@@ -24,6 +25,13 @@ router.patch(
   "/candidates/:id/status",
   authMiddleware(["SUPER_ADMIN", "ADMIN"]),
   toggleCandidateStatus,
+);
+
+// CSV export — PRD §5.8.4
+router.get(
+  "/candidates/export",
+  authMiddleware(["SUPER_ADMIN", "ADMIN"]),
+  exportCandidates,
 );
 
 export default router;

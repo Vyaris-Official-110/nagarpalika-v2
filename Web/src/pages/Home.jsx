@@ -1,12 +1,10 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
+import api from '../api/index'
 
-const FACTS = [
-  { n: '142', l: 'Open Posts' },
-  { n: '10', l: 'Active Advts.' },
-  { n: '22/05', l: 'Next Last Date' },
-  { n: '33', l: 'Districts Covered' },
-]
+const FACT_NUMS = ['142', '10', '22/05', '33']
+const FACT_KEYS = ['home.stat.posts', 'home.stat.advts', 'home.stat.date', 'home.stat.dist']
 
 const SERVICES = [
   { title: 'Mukhyamantri Awas Yojana (Urban)', sub: 'Affordable housing for EWS & LIG households · મુખ્યમંત્રી શહેરી આવાસ યોજના', dept: 'Urban Housing Cell', badge: 'active', badgeLabel: 'Active', action: 'Apply ▶' },
@@ -56,8 +54,63 @@ function VmList({ ariaHidden }) {
 
 export default function Home() {
   const { t } = useLang()
+  const [liveNotices, setLiveNotices] = useState([])
+  const [importantInstructions, setImportantInstructions] = useState(null)
+
+  useEffect(() => {
+    api.post('/api/v1/notices/search', { status: 'published', per_page: 5, skip: 0 })
+      .then((res) => {
+        const rows = res.data?.data?.[0]?.data ?? []
+        setLiveNotices(rows)
+      })
+      .catch(() => {})
+    api.get('/api/v1/config/important_instructions')
+      .then((res) => {
+        const val = res.data?.data
+        if (val && typeof val === 'string') setImportantInstructions(val)
+      })
+      .catch(() => {})
+  }, [])
+
   return (
     <>
+      {/* Branding bar — municipality logo, name GU+EN, GoG emblem — PRD §3.1 */}
+      <div className="branding-bar">
+        <div className="branding-bar-inner">
+          <img src="/assets/gog-emblem.png" alt="Government of Gujarat emblem" className="branding-emblem" onError={(e) => { e.target.style.display = 'none' }} />
+          <div className="branding-text">
+            <div className="branding-name-en">Patan &amp; Palanpur Municipal Council</div>
+            <div className="branding-name-gu" style={{ fontFamily: 'var(--font-guj)' }}>પાટણ અને પાલનપુર નગરપાલિકા</div>
+            <div className="branding-dept">Department of Urban Development &amp; Urban Housing · Government of Gujarat</div>
+          </div>
+          <img src="/assets/nagarpalika-logo.png" alt="Nagarpalika logo" className="branding-logo" onError={(e) => { e.target.style.display = 'none' }} />
+        </div>
+      </div>
+
+      {/* Ticker bar 1 — helpline — PRD §3.1 */}
+      <div className="ticker-bar ticker-helpline" aria-label="Helpline information">
+        <span className="ticker-label">HELPLINE</span>
+        <div className="ticker-scroll">
+          <span>
+            Recruitment Help Desk: <strong>1800-233-5500</strong> (Toll Free) · Mon–Sat 10:00–18:00 &nbsp;|&nbsp;
+            Email: <strong>recruitment@nagarpalika.gujarat.gov.in</strong> &nbsp;|&nbsp;
+            OTR Technical Support: <strong>079-23250871</strong>
+          </span>
+        </div>
+      </div>
+
+      {/* Ticker bar 2 — OTR status — PRD §3.1 */}
+      <div className="ticker-bar ticker-otr" aria-label="OTR status updates">
+        <span className="ticker-label">OTR STATUS</span>
+        <div className="ticker-scroll">
+          <span>
+            One-Time Registration (OTR) is OPEN · ઓટીઆર નોંધણી ચાલુ છે &nbsp;|&nbsp;
+            Register now at <Link to="/otr">nagarpalika-otr.gujarat.gov.in</Link> &nbsp;|&nbsp;
+            Already registered? <Link to="/otr/find">Find your Registration ID</Link>
+          </span>
+        </div>
+      </div>
+
       <div className="hero-strip">
         <div className="eyebrow">{t('home.welcome.eyebrow')}</div>
         <h1>{t('home.welcome.h')}</h1>
@@ -65,10 +118,10 @@ export default function Home() {
       </div>
 
       <div className="fact-strip">
-        {FACTS.map(f => (
-          <div key={f.l} className="fact">
-            <div className="n">{f.n}</div>
-            <div className="l">{f.l}</div>
+        {FACT_KEYS.map((key, i) => (
+          <div key={key} className="fact">
+            <div className="n">{FACT_NUMS[i]}</div>
+            <div className="l">{t(key)}</div>
           </div>
         ))}
       </div>
@@ -110,34 +163,58 @@ export default function Home() {
             </div>
           </div>
 
-          {/* News */}
+          {/* Notice Board — live from API, static fallback */}
           <div className="box" style={{ marginTop: 12 }}>
             <div className="box-title">
               <span>{t('home.news.title')}</span>
               <span className="guj">{t('home.news.guj')}</span>
             </div>
             <div className="box-body">
-              <ul className="news-list">
-                {NEWS.map((n, i) => (
-                  <li key={i}>
-                    <div className="news-date">
-                      <span className="news-day">{n.day}</span>
-                      <span className="news-mo">{n.mo}</span>
-                    </div>
-                    <div className="news-body">
-                      <h3>
-                        <span className={`tag ${n.tag}`}>{n.tagLabel}</span>
-                        {n.h}
-                      </h3>
-                      <p>{n.p}</p>
-                      {n.router
-                        ? <Link to={n.href}>View open positions ▶</Link>
-                        : <a href={n.href}>Read full notice ▶</a>
-                      }
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {liveNotices.length > 0 ? (
+                <ul className="news-list">
+                  {liveNotices.map((n) => {
+                    const d = n.publishedAt ? new Date(n.publishedAt) : new Date(n.createdAt)
+                    return (
+                      <li key={n._id}>
+                        <div className="news-date">
+                          <span className="news-day">{String(d.getDate()).padStart(2, '0')}</span>
+                          <span className="news-mo">{d.toLocaleString('en-IN', { month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <div className="news-body">
+                          <h3>
+                            <span className="tag notice">Notice</span>
+                            {n.title}
+                          </h3>
+                          {n.body && <p>{n.body.slice(0, 160)}{n.body.length > 160 ? '…' : ''}</p>}
+                          <Link to="/notices">Read full notice ▶</Link>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : (
+                <ul className="news-list">
+                  {NEWS.map((n, i) => (
+                    <li key={i}>
+                      <div className="news-date">
+                        <span className="news-day">{n.day}</span>
+                        <span className="news-mo">{n.mo}</span>
+                      </div>
+                      <div className="news-body">
+                        <h3>
+                          <span className={`tag ${n.tag}`}>{n.tagLabel}</span>
+                          {n.h}
+                        </h3>
+                        <p>{n.p}</p>
+                        {n.router
+                          ? <Link to={n.href}>View open positions ▶</Link>
+                          : <a href={n.href}>Read full notice ▶</a>
+                        }
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -182,9 +259,11 @@ export default function Home() {
           </div>
 
           <div className="notice info" style={{ marginTop: 12 }}>
-            <div className="title">NOTE · નોંધ</div>
-            Candidates are advised to read the advertisement carefully before applying online.{' '}
-            <span style={{ fontFamily: 'var(--font-guj)' }}>ઓનલાઇન અરજી કરતાં પહેલાં જાહેરાત કાળજીપૂર્વક વાંચવી.</span>
+            <div className="title">{t('home.note.title')}</div>
+            {importantInstructions
+              ? <span style={{ whiteSpace: 'pre-line' }}>{importantInstructions}</span>
+              : <>{t('home.note.body')}{' '}<span style={{ fontFamily: 'var(--font-guj)' }}>{t('home.note.body.guj')}</span></>
+            }
           </div>
         </div>
       </div>

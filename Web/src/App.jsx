@@ -22,6 +22,7 @@ import Step8Photo from './pages/Registration/Step8Photo'
 import Step9Signature from './pages/Registration/Step9Signature'
 import Step10Preview from './pages/Registration/Step10Preview'
 import FindRegistration from './pages/Registration/FindRegistration'
+import EditRegistration from './pages/Registration/EditRegistration'
 
 function Layout({ children }) {
   return (
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="/otr/step/9"    element={<Layout><Step9Signature /></Layout>} />
             <Route path="/otr/step/10"   element={<Layout><Step10Preview /></Layout>} />
             <Route path="/otr/find"      element={<Layout><FindRegistration /></Layout>} />
+            <Route path="/registration/edit" element={<Layout><EditRegistration /></Layout>} />
           </Routes>
         </CandidateAuthProvider>
       </BrowserRouter>

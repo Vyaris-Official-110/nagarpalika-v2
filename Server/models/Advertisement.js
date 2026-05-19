@@ -18,7 +18,7 @@ const advertisementSchema = new mongoose.Schema(
     pdfPath: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["draft", "published", "closed"],
+      enum: ["draft", "published", "closed", "archived"],
       default: "draft",
     },
     tenantId: { type: String, required: true, index: true },

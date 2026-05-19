@@ -35,9 +35,12 @@ import FeePayments from "../pages/Recruitment/FeePayments";
 import CallLetters from "../pages/Recruitment/CallLetters";
 import RecruitmentNotices from "../pages/Recruitment/Notices";
 import NoticesForm from "../pages/Recruitment/NoticesForm";
+import HelpQueries from "../pages/Recruitment/HelpQueries";
+import TwoFactorSetup from "../pages/Setup/TwoFactorSetup";
 
 const authProtectedRoutes = [
     { path: "/profile",         component: <UserProfile /> },
+    { path: "/2fa-setup",       component: <TwoFactorSetup /> },
     { path: "/dashboard",       component: <Dashboard /> },
     { path: "/company-details", component: <CompanyDetails /> },
 
@@ -114,8 +117,9 @@ const authProtectedRoutes = [
     { path: "/fee-payments", component: <FeePayments /> },
     { path: "/call-letters", component: <CallLetters /> },
 
-    { path: "/notice",     component: <RecruitmentNotices /> },
-    { path: "/notice/add", component: <NoticesForm /> },
+    { path: "/notice",       component: <RecruitmentNotices /> },
+    { path: "/notice/add",   component: <NoticesForm /> },
+    { path: "/help-queries", component: <HelpQueries /> },
 
     { path: "/",  exact: true, component: <Navigate to="/dashboard" /> },
     { path: "*",  component: <Navigate to="/dashboard" /> },

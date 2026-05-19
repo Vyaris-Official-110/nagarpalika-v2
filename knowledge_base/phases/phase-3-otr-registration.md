@@ -32,7 +32,8 @@
 | **RegistrationLayout + stepper** | `Web/src/pages/Registration/RegistrationLayout.jsx` + `.otr-stepper` CSS |
 | **FindRegistration page** | `Web/src/pages/Registration/FindRegistration.jsx` |
 | **LoginModal** | `Web/src/components/LoginModal.jsx` |
-| **App.jsx OTR routes** | `/otr`, `/otr/step/1–10`, `/otr/find` |
+| **App.jsx OTR routes** | `/otr`, `/otr/step/1–10`, `/otr/find`, `/registration/edit` |
+| **EditRegistration page** | `Web/src/pages/Registration/EditRegistration.jsx` — step 1 always "View ▶" (Aadhaar immutable); step 2 notes name/DOB locked; 48h window enforced |
 | **Header login button** | `Web/src/components/Header.jsx` — candidate-aware login/logout |
 
 ## Security Checklist (All Implemented ✅)

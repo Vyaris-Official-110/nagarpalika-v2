@@ -1,4 +1,6 @@
 import Notice from "../../models/Notice.js";
+import path from "path";
+import fs from "fs";
 
 export const listNotices = async (req, res) => {
   try {
@@ -49,28 +51,28 @@ export const getNoticeById = async (req, res) => {
 
 export const createNotice = async (req, res) => {
   try {
-    const { title, type, refNo, publishedAt, expiresAt, pdfPath } = req.body;
+    const { title, body, type, refNo, publishedAt, expiresAt, pdfPath } =
+      req.body;
 
     const notice = new Notice({
       title,
+      body: body ?? "",
       type,
       refNo,
       publishedAt,
       expiresAt,
-      pdfPath,
+      pdfPath: pdfPath ?? "",
       status: "draft",
       tenantId: req.tenantId,
     });
 
     await notice.save();
 
-    return res
-      .status(201)
-      .json({
-        isOk: true,
-        message: "Notice created successfully",
-        status: 201,
-      });
+    return res.status(201).json({
+      isOk: true,
+      message: "Notice created successfully",
+      status: 201,
+    });
   } catch (error) {
     console.error("Error in createNotice:", error);
     return res
@@ -95,13 +97,11 @@ export const publishNotice = async (req, res) => {
     }
 
     if (notice.status === "published") {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Notice already published",
-          status: 400,
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Notice already published",
+        status: 400,
+      });
     }
 
     notice.status = "published";
@@ -136,15 +136,100 @@ export const deleteNotice = async (req, res) => {
     notice.isDeleted = true;
     await notice.save();
 
+    return res.status(200).json({
+      isOk: true,
+      message: "Notice deleted successfully",
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error in deleteNotice:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const updateNotice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, body, type, refNo, publishedAt, expiresAt } = req.body;
+
+    const notice = await Notice.findOne({
+      _id: id,
+      tenantId: req.tenantId,
+      isDeleted: false,
+    });
+    if (!notice) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Notice not found", status: 404 });
+    }
+
+    if (title !== undefined) notice.title = title;
+    if (body !== undefined) notice.body = body;
+    if (type !== undefined) notice.type = type;
+    if (refNo !== undefined) notice.refNo = refNo;
+    if (publishedAt !== undefined) notice.publishedAt = publishedAt;
+    if (expiresAt !== undefined) notice.expiresAt = expiresAt;
+
+    await notice.save();
+
+    return res
+      .status(200)
+      .json({ isOk: true, message: "Notice updated", status: 200 });
+  } catch (error) {
+    console.error("Error in updateNotice:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const uploadNoticePdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ isOk: false, message: "No PDF uploaded", status: 400 });
+    }
+
+    const notice = await Notice.findOne({
+      _id: id,
+      tenantId: req.tenantId,
+      isDeleted: false,
+    });
+    if (!notice) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Notice not found", status: 404 });
+    }
+
+    // Remove old PDF if present
+    if (notice.pdfPath) {
+      const oldPath = path.join(
+        global.__basedir,
+        "uploads",
+        "notices",
+        notice.pdfPath,
+      );
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    notice.pdfPath = req.file.filename;
+    await notice.save();
+
     return res
       .status(200)
       .json({
         isOk: true,
-        message: "Notice deleted successfully",
+        message: "PDF uploaded",
+        pdfPath: req.file.filename,
         status: 200,
       });
   } catch (error) {
-    console.error("Error in deleteNotice:", error);
+    console.error("Error in uploadNoticePdf:", error);
     return res
       .status(500)
       .json({ isOk: false, message: "Internal server error", status: 500 });

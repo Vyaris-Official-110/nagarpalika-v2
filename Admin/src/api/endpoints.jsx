@@ -131,17 +131,21 @@ export const ENDPOINTS = {
 
     // ── Recruitment Portal ────────────────────────────────────────────────────
     ADVERTISEMENTS: {
-        BASE:    `${V1}/advertisements`,
-        BY_ID:   (id) => `${V1}/advertisements/${id}`,
-        SEARCH:  `${V1}/advertisements/search`,
-        PUBLISH: (id) => `${V1}/advertisements/${id}/publish`,
-        CLOSE:   (id) => `${V1}/advertisements/${id}/close`,
+        BASE:       `${V1}/advertisements`,
+        BY_ID:      (id) => `${V1}/advertisements/${id}`,
+        SEARCH:     `${V1}/advertisements/search`,
+        PUBLISH:    (id) => `${V1}/advertisements/${id}/publish`,
+        CLOSE:      (id) => `${V1}/advertisements/${id}/close`,
+        ARCHIVE:    (id) => `${V1}/advertisements/${id}/archive`,
+        UPLOAD_PDF: (id) => `${V1}/advertisements/${id}/pdf`,
+        BULK_ZIP:   `${V1}/advertisements/bulk-export/zip`,
     },
 
     CANDIDATES: {
         SEARCH: `${V1}/candidates/search`,
         BY_ID:  (id) => `${V1}/candidates/${id}`,
         STATUS: (id) => `${V1}/candidates/${id}/status`,
+        EXPORT: `${V1}/candidates/export`,
     },
 
     APPLICATIONS: {
@@ -151,26 +155,39 @@ export const ENDPOINTS = {
     },
 
     FEE_PAYMENTS: {
-        SEARCH: `${V1}/fee-payments/search`,
-        BY_ID:  (id) => `${V1}/fee-payments/${id}`,
+        SEARCH:         `${V1}/fee-payments/search`,
+        BY_ID:          (id) => `${V1}/fee-payments/${id}`,
+        RECONCILIATION: `${V1}/fee-payments/reconciliation`,
+        VERIFY:         (id) => `${V1}/fee-payments/${id}/verify`,
     },
 
     CALL_LETTERS: {
-        SEARCH: `${V1}/call-letters/search`,
-        BY_ID:  (id) => `${V1}/call-letters/${id}`,
-        UPDATE: (id) => `${V1}/call-letters/${id}`,
+        SEARCH:       `${V1}/call-letters/search`,
+        BY_ID:        (id) => `${V1}/call-letters/${id}`,
+        UPDATE:       (id) => `${V1}/call-letters/${id}`,
+        ROLL_NUMBERS: (advtNo) => `${V1}/call-letters/${advtNo}/roll-numbers`,
     },
 
     NOTICES: {
-        BASE:    `${V1}/notices`,
-        BY_ID:   (id) => `${V1}/notices/${id}`,
-        SEARCH:  `${V1}/notices/search`,
-        PUBLISH: (id) => `${V1}/notices/${id}/publish`,
+        BASE:       `${V1}/notices`,
+        BY_ID:      (id) => `${V1}/notices/${id}`,
+        SEARCH:     `${V1}/notices/search`,
+        PUBLISH:    (id) => `${V1}/notices/${id}/publish`,
+        UPLOAD_PDF: (id) => `${V1}/notices/${id}/pdf`,
     },
 
     HELP_QUERIES: {
         SEARCH: `${V1}/help/queries/search`,
         STATUS: (id) => `${V1}/help/queries/${id}/status`,
+    },
+
+    CONFIG: {
+        BY_KEY: (key) => `${V1}/config/${key}`,
+    },
+
+    EMPLOYEES_2FA: {
+        SETUP:  `${V1}/auth/2fa/setup`,
+        ENABLE: `${V1}/auth/2fa/enable`,
     },
 };
 

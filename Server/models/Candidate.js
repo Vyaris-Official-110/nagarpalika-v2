@@ -79,6 +79,7 @@ const candidateSchema = new mongoose.Schema(
     passwordHash: { type: String, default: "" },
     loginAttempts: { type: Number, default: 0 },
     lockoutUntil: { type: Date },
+    activeSessionId: { type: String, default: "" }, // single-session enforcement — PRD §9.1
 
     // OTR workflow
     otrStep: { type: Number, default: 1, min: 1, max: 10 },

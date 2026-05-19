@@ -7,7 +7,7 @@ export async function generateRegistrationId(tenantId) {
   const counter = await Counter.findOneAndUpdate(
     { key },
     { $inc: { seq: 1 } },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
+    { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
   const seq = String(counter.seq).padStart(7, "0");

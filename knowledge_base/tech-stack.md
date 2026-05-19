@@ -1,8 +1,8 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-19 (P1+P2+P3+P7 complete — branch feat/p3-otr-registration)
+> Last updated: 2026-05-19 session-end (P1+P2+P3+P7 complete + all audit fixes applied — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
-> **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped. Application/Fee/CallLetter citizen flows blocked.
+> **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped + audited. Application/Fee/CallLetter citizen flows blocked.
 
 ---
 
@@ -37,7 +37,7 @@ Nagarpalika/
 
 | Path | Component | Status |
 |------|-----------|--------|
-| `/` | `Home.jsx` | Static — hardcoded facts/news/services |
+| `/` | `Home.jsx` | **API-driven** — live notices (`POST /api/v1/notices/search`), Important Instructions (`GET /api/v1/config/important_instructions`), branding bar, 2 ticker bars |
 | `/about` | `About.jsx` | Static |
 | `/careers` | `Careers.jsx` | **API-driven** — fetches from `GET /api/v1/advertisements` |
 | `/notices` | `Notices.jsx` | **API-driven** — fetches from `GET /api/v1/notices` |
@@ -45,32 +45,19 @@ Nagarpalika/
 | `/results` | `Results.jsx` | Static — form UI-only (not functional) |
 | `/callletter` | `CallLetter.jsx` | Static — form UI-only (not functional) |
 | `/contact` | `Contact.jsx` | Static — form UI-only (not functional) |
+| `/otr` | `Step1Aadhaar.jsx` | **P3 — OTR start** |
+| `/otr/step/1–10` | `Step1–Step10.jsx` | **P3 — 10-step flow** |
+| `/otr/find` | `FindRegistration.jsx` | **P3 — find reg ID** |
+| `/registration/edit` | `EditRegistration.jsx` | **P3 — edit OTR** (step 1 always View ▶; step 2 notes locked fields; 48h window enforced) |
 
 ### Data Files
 
 | File | Contents |
 |------|----------|
-| `src/data/marqueeItems.js` | 5 marquee ticker items |
 | `src/data/i18n.js` | 40+ translation keys × 3 languages (EN/HI/GU) |
 | `src/api/index.js` | Axios instance — base URL from `VITE_API_URL`, `withCredentials: true` |
 
-### Routes (P3 added)
-
-| Path | Component | Status |
-|------|-----------|--------|
-| `/` | `Home.jsx` | Static |
-| `/about` | `About.jsx` | Static |
-| `/careers` | `Careers.jsx` | API-driven |
-| `/notices` | `Notices.jsx` | API-driven |
-| `/help` | `Help.jsx` | API-driven |
-| `/results` | `Results.jsx` | Static (UI-only) |
-| `/callletter` | `CallLetter.jsx` | Static (UI-only) |
-| `/contact` | `Contact.jsx` | Static (UI-only) |
-| `/otr` | `Step1Aadhaar.jsx` | **P3 — OTR start** |
-| `/otr/step/1–10` | `Step1–Step10.jsx` | **P3 — 10-step flow** |
-| `/otr/find` | `FindRegistration.jsx` | **P3 — find reg ID** |
-
-### Contexts & API Clients (P3 added)
+### Contexts & API Clients
 
 | File | Purpose |
 |------|---------|
@@ -125,20 +112,23 @@ Nagarpalika/
 - Every protected page checks `currentPagePermissions` before showing action buttons
 - `AuthProtected.jsx` redirects to `/` if no session role
 
-### Current Routes (Nagar Palika — P7 complete)
+### Current Routes (P7 complete)
 
 | Route | Component | Purpose |
 |-------|-----------|---------|
 | `/dashboard` | `Dashboard.jsx` | Recruitment stats (activeAdvt, candidates, applications, feesCollected) |
 | `/advertisement` | `Advertisements.jsx` | Advertisement list + publish/close/delete |
 | `/advertisement/add` | `AdvertisementsForm.jsx` | Create advertisement |
-| `/advertisement/:id/edit` | `AdvertisementsForm.jsx` | Edit advertisement |
-| `/candidates` | `Candidates.jsx` | OTR candidate list + activate/deactivate |
+| `/advertisement/:id/edit` | `AdvertisementsForm.jsx` | Edit advertisement + PDF upload card |
+| `/candidates` | `Candidates.jsx` | OTR candidate list + activate/deactivate + CSV export |
 | `/applications` | `Applications.jsx` | Application list + inline status update |
-| `/fee-payments` | `FeePayments.jsx` | Fee payment list (read-only) |
+| `/fee-payments` | `FeePayments.jsx` | Fee payment list + reconciliation + manual verify |
 | `/call-letters` | `CallLetters.jsx` | Call letter list + enable/disable |
 | `/notice` | `Notices.jsx` | Notice list + publish/delete |
 | `/notice/add` | `NoticesForm.jsx` | Create notice |
+| `/help-queries` | `HelpQueries.jsx` | Help query inbox |
+| `/2fa-setup` | `TwoFactorSetup.jsx` | Admin 2FA setup — shows status, QR, verify + enable flow |
+| `/profile` | `UserProfile.jsx` | Admin profile |
 | `/employee` | `Employee.jsx` | Admin user management |
 | `/employee-roles` | `EmployeeRoles.jsx` | Role permission matrix |
 | `/department` | `Department.jsx` | Department CRUD |
@@ -150,9 +140,8 @@ Nagarpalika/
 
 ### What Needs to Be Built (Phase 8+)
 
-- Help queries admin inbox page (referenced in dashboard, route missing)
-- Bulk ZIP export for call letters (P7 spec item, not yet implemented)
-- Recruitment event email triggers (P8)
+- Recruitment event email/WhatsApp triggers (P8)
+- Bulk ZIP async export for applications (P7 spec §5.8.8 — stub endpoint exists, full impl blocked by P4)
 
 ---
 
@@ -163,12 +152,12 @@ Nagarpalika/
 | **Framework** | Express 4.21.2 |
 | **Runtime** | Node.js ≥ 22 / Bun compatible |
 | **Database** | MongoDB (Mongoose 8.11.0) |
-| **Auth** | Express Session (connect-mongo, 24h TTL, HttpOnly cookie) |
+| **Auth** | Express Session (connect-mongo, 24h TTL, HttpOnly + Secure + SameSite=Strict cookie) |
 | **Port** | 8000 (configurable via `PORT` env var) |
 | **API prefix** | `/api/v1/` |
 | **File uploads** | Multer + magic byte validation (file-type) + Sharp compression |
 | **Input validation** | express-validator chains |
-| **Security** | Helmet + CORS + express-mongo-sanitize + HPP + express-rate-limit |
+| **Security** | Helmet + CORS + express-mongo-sanitize + HPP + express-rate-limit + CSRF double-submit cookie (`csrfMiddleware.js`) |
 | **Email** | Nodemailer (SMTP, DB-configured via admin panel) |
 | **WhatsApp** | Meta Cloud API v21.0 (DB-configured via admin panel) |
 | **Documentation** | Swagger UI at `/api-docs` (dev only) |
@@ -215,7 +204,7 @@ Nagarpalika/
 | `/api/v1/advertisements` | `advertisement.controller.js` | search (POST), getById, create, update, publish (PATCH), close (PATCH), delete |
 | `/api/v1/candidates` | `candidate.controller.js` | search (POST), getById, toggleStatus (PATCH) |
 | `/api/v1/applications` | `application.controller.js` | search (POST), getById, updateStatus (PATCH) |
-| `/api/v1/fee-payments` | `feePayment.controller.js` | search (POST), getById |
+| `/api/v1/fee-payments` | `feePayment.controller.js` | search (POST), getById, feeReconciliationReport (GET), manualVerifyFee (PATCH) |
 | `/api/v1/call-letters` | `callLetter.controller.js` | search (POST), getById, update (PATCH) |
 | `/api/v1/notices` | `notice.controller.js` | search (POST), create, getById, publish (PATCH), delete |
 | `/api/v1/help-queries` | `helpQuery.controller.js` | create (public), search (POST, admin), updateStatus (PATCH) |
@@ -231,13 +220,18 @@ Nagarpalika/
 | `/api/v1/otr/upload/signature` (POST, auth) | `otr.controller.js` | Same as photo, <1 MB |
 | `/api/v1/otr/submit` (POST, auth) | `otr.controller.js` | reCAPTCHA verify; bcrypt 12 rounds; sets editWindowExpiresAt; SMS confirmation |
 
-### New Files Added (P3)
+### New Files Added (P3 + P7)
 
 | File | Purpose |
 |------|---------|
-| `middlewares/candidateAuth.js` | Protects OTR authenticated routes; attaches `req.candidate` |
+| `middlewares/candidateAuth.js` | Protects OTR routes; attaches `req.candidate`; single-session enforcement |
+| `middlewares/csrfMiddleware.js` | CSRF double-submit cookie — sets `csrf-token` cookie, validates `x-csrf-token` header |
 | `services/sms.service.js` | SMS stub (logs in dev); production BSP wiring pending Q#9 |
 | `utils/registrationId.js` | Atomic counter → `RP-{TENANT}-{YEAR}-{7DIGIT}` |
+| `models/SiteConfig.js` | Admin-editable key-value config per tenant (e.g. `important_instructions`) |
+| `controllers/v1/config.controller.js` | `GET /api/v1/config/:key` returns `{ isOk, data: string }`; `PATCH` updates |
+| `routes/v1/config.routes.js` | Config routes (GET public, PATCH admin-only) |
+| `Admin/src/pages/Setup/TwoFactorSetup.jsx` | Admin 2FA setup page — shows status, QR code (via api.qrserver.com), enable flow |
 
 ### Multi-Tenant Status
 
@@ -246,31 +240,32 @@ Nagarpalika/
 - All recruitment models (Advertisement, Candidate, Application, FeePayment, CallLetter, Notice, HelpQuery) include `tenantId` field and filter by it in every query
 - Legacy admin models (Employee, Dept, MenuMaster, Role) remain single-tenant — acceptable while only one municipality uses admin panel
 
-### Security Features Already Present
+### Security Implemented
 
-- ✅ bcrypt password hashing
-- ✅ Session-based auth (HttpOnly, Secure, SameSite)
-- ✅ Magic byte file validation (`file-type` library)
-- ✅ Secure filenames (UUID-based)
-- ✅ Image compression (Sharp → WebP)
-- ✅ Input validation (express-validator)
-- ✅ NoSQL injection prevention (express-mongo-sanitize)
-- ✅ HPP protection
-- ✅ Rate limiting (express-rate-limit)
-- ✅ Security headers (Helmet + custom CSP)
-- ✅ Swagger docs (dev only)
-- ✅ OTP with TTL index (10-min auto-expire)
-- ✅ Soft deletes (isDeleted flag)
-- ✅ Audit fields (createdBy, updatedBy on all models)
+- ✅ bcrypt cost **12** — all passwords (admin + candidate)
+- ✅ Session: HttpOnly + Secure + SameSite=Strict + MongoDB store (connect-mongo)
+- ✅ Admin 15-min inactivity timeout (`authMiddleware.js` via `adminLastActivity`)
+- ✅ Admin brute-force: 3 attempts → 30-min lockout (PRD §9.11)
+- ✅ Candidate brute-force: 5 attempts → 15-min lockout
+- ✅ Single-session enforcement: `activeSessionId` on Candidate model
+- ✅ Session fixation prevention: `req.session.regenerate()` on every login
+- ✅ Admin 2FA TOTP (otplib v12+ ESM: `generateSecret`, `generateURI`, `verify`)
+- ✅ Admin IP whitelist per-employee (`authMiddleware.js`)
+- ✅ CSRF double-submit cookie (`csrfMiddleware.js`)
+- ✅ Tenant isolation — `req.tenantId` from Host header, on every DB query
+- ✅ DEPT_ADMIN scope enforcement (`roleScope.js` middleware)
+- ✅ Magic-byte MIME validation + WebP re-encode + UUID filenames
+- ✅ Security headers (Helmet + custom CSP/HSTS/X-Frame-Options)
+- ✅ OTP: 6-digit, 300s TTL, 3 attempts, rate-limited 3/hr/phone
+- ✅ CAPTCHA: server-side reCAPTCHA verify at registration submit
+- ✅ Enumeration prevention on findRegistration endpoint
 
-### Security Gaps to Fix (Before Go-Live)
+### Security Gaps Remaining (Before Go-Live / P9)
 
-- ❌ No multi-tenant isolation (tenant_id missing from all models)
-- ❌ No UIDAI Aadhaar OTP integration
-- ❌ No payment gateway webhook HMAC verification
-- ❌ `express-async-errors` not installed (unhandled promise rejections possible)
-- ❌ JWT secrets defined but JWT not used for auth (inconsistency — remove or clarify)
-- ❌ No append-only audit log table
+- ❌ UIDAI Aadhaar OTP — stub in place (SHA-256 only); real UIDAI API when AUA granted
+- ❌ Payment gateway webhook HMAC verification (P5 — blocked)
+- ❌ Append-only audit log table (P9)
+- ❌ Aadhaar Verhoeff checksum server-side validation not wired
 
 ---
 

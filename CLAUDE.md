@@ -54,13 +54,13 @@ nagarpalika-v2/
 
 | Phase | Status | Next Action | Blockers |
 |-------|--------|-------------|----------|
-| P1 · Foundation | 🟢 Done | Models + middleware shipped. Next: add candidate/application/fee/callLetter controllers+routes in their respective phases | — |
-| P2 · Public Frontend | 🟢 Done | Notice + HelpQuery models/controllers/routes; Careers + Notices pages fetch from API; dropdown nav with Registration + Online Application groups; Help page with FAQ + contact form | — |
-| P3 · OTR Registration | 🟢 Done | Full 10-step flow shipped: Server (Candidate model, OTP model, candidateAuth middleware, otr.controller, otr.routes, sms.service, registrationId util) + Web (CandidateAuthContext, api/otr.js, Steps 1–10, FindRegistration, LoginModal, App.jsx routes, Header login button, stepper CSS). Mock Aadhaar (SHA-256 hash, no UIDAI call), 48h edit window, reCAPTCHA hook, bcrypt passwords, brute-force lockout. | Swap UIDAI stub when AUA empanelment done (Q#3); wire WhatsApp BSP when registered (Q#9) |
+| P1 · Foundation | 🟢 Done | All shipped: CSRF middleware, admin 15-min inactivity timeout, admin 2FA TOTP (otplib v12+), IP whitelist, bcrypt cost 12 everywhere, SiteConfig model + config routes, SameSite=Strict session cookie | — |
+| P2 · Public Frontend | 🟢 Done | Home.jsx: branding bar + 2 ticker bars + live notices (API-first, static fallback) + Important Instructions from `GET /api/v1/config/important_instructions`. Careers + Notices + Help API-driven. Nav dropdowns. | — |
+| P3 · OTR Registration | 🟢 Done | Full 10-step flow + EditRegistration (`/registration/edit`): step 1 always "View ▶", step 2 locked-field note. All security: bcrypt 12, brute-force lockout, single-session, session fixation, CAPTCHA. | Swap UIDAI stub when AUA granted (Q#3); wire WhatsApp BSP when registered (Q#9) |
 | P4 · Application | 🔴 Not started | Apply flow + edit window + print PDF | **Q#8: form fields unresolved (HARD BLOCK)** |
 | P5 · Fee Payment | 🔴 Not started | Payment gateway adapter + webhook HMAC + PDF receipt | Q#2 (online-only?), Q#7 (gateway choice), contract not signed |
 | P6 · Call Letter | 🔴 Not started | Eligibility check + signed download token + admit card PDF | Depends on P4, P5 |
-| P7 · Admin Panel | 🟢 Done | All 6 recruitment pages shipped (Advertisements CRUD, Candidates, Applications, FeePayments, CallLetters, Notices). Controllers + routes for candidates/applications/feePayments/callLetters. Dashboard replaced with recruitment stats. Analytics controller updated. | — |
+| P7 · Admin Panel | 🟢 Done | 6 recruitment pages + fee reconciliation + manual verify + 2FA UI page (`/2fa-setup`) + advertisement PDF upload. Bulk ZIP async export stub only (blocked by P4). | — |
 | P8 · Notifications | 🟡 Partial | Recruitment event triggers + SMS fallback + UIDAI OTP wiring + email service | **Q#9: WhatsApp BSP not registered (HARD BLOCK)** |
 | P9 · Security/Pentest | 🔴 Not started | Hardening checklist per PRD §9 + pentest scope + remediation SLA | Depends on P1–P8 |
 

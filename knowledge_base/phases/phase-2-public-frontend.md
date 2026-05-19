@@ -3,28 +3,27 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 2 of 9 |
-| **Status** | 🟢 Complete — /careers + /notices API-driven; /help page with FAQ + contact form; nav dropdowns added |
+| **Status** | 🟢 Complete — /careers + /notices API-driven; /help page; nav dropdowns; Home.jsx branding bar + ticker bars + live notices + Important Instructions from API |
 | **Depends On** | Phase 1 (Advertisement, Notice, Candidate models + routes must exist) |
 | **Blocks** | Phase 3 (nav restructure needed before OTR flow) |
 | **PRD Sections** | §5 M1 Home Page · §10 Existing Frontend Carry-Over |
 
 ---
 
-## Current State
-
-React 18 + Vite SPA at `Web/`. All 7 routes exist. All data is hardcoded in `src/data/*.js`. Zero API calls. Forms are UI-only (not functional).
+## Already Built ✅
 
 | Route | File | Status |
 |-------|------|--------|
-| `/` | `Home.jsx` | Static — hardcoded facts/services/news |
-| `/about` | `About.jsx` | Static — keep as-is |
-| `/careers` | `Careers.jsx` | Static — data from `src/data/jobs.js` |
-| `/notices` | `Notices.jsx` | Static — hardcoded list |
-| `/results` | `Results.jsx` | Static — UI only, not functional |
-| `/callletter` | `CallLetter.jsx` | Static — UI only, not functional |
-| `/contact` | `Contact.jsx` | Static — form not functional |
+| `/` | `Home.jsx` | **API-driven** — branding bar, 2 ticker bars, live notices (API-first + static fallback), Important Instructions from `GET /api/v1/config/important_instructions` |
+| `/about` | `About.jsx` | Static — kept as-is |
+| `/careers` | `Careers.jsx` | **API-driven** — `GET /api/v1/advertisements` |
+| `/notices` | `Notices.jsx` | **API-driven** — `GET /api/v1/notices` |
+| `/help` | `Help.jsx` | **API-driven** — FAQ accordions + contact form → `POST /api/v1/help-queries` |
+| `/results` | `Results.jsx` | Static — UI only |
+| `/callletter` | `CallLetter.jsx` | Static — UI only (functional M5 in P6) |
+| `/contact` | `Contact.jsx` | Static |
 
-**Needs:** `/registration`, `/application`, `/fee`, `/help` routes don't exist yet.
+Nav restructure done: Registration dropdown (Apply/Edit/Find) + Online Application dropdown + Login modal trigger in Header.jsx.
 
 ---
 

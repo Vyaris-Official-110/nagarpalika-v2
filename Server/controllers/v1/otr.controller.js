@@ -31,10 +31,14 @@ export const sendAadhaarOtp = async (req, res) => {
     const { aadhaar, mobile } = req.body;
 
     if (!aadhaar || !/^\d{12}$/.test(aadhaar.trim())) {
-      return res.status(400).json({ isOk: false, message: "Invalid Aadhaar number" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid Aadhaar number" });
     }
     if (!mobile || !/^\d{10}$/.test(mobile.trim())) {
-      return res.status(400).json({ isOk: false, message: "Invalid mobile number" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid mobile number" });
     }
 
     const aadhaarHash = hashAadhaar(aadhaar);
@@ -47,7 +51,8 @@ export const sendAadhaarOtp = async (req, res) => {
     if (existing) {
       return res.status(409).json({
         isOk: false,
-        message: "This Aadhaar is already registered. Use 'Find Registration' to retrieve your ID.",
+        message:
+          "This Aadhaar is already registered. Use 'Find Registration' to retrieve your ID.",
       });
     }
 
@@ -80,7 +85,9 @@ export const sendAadhaarOtp = async (req, res) => {
     return res.status(200).json(response);
   } catch (err) {
     console.error("sendAadhaarOtp error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -89,19 +96,25 @@ export const verifyAadhaarOtp = async (req, res) => {
     const { otp } = req.body;
 
     if (!otp || !/^\d{6}$/.test(otp.trim())) {
-      return res.status(400).json({ isOk: false, message: "Invalid OTP format" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid OTP format" });
     }
 
     const preSession = req.session.otr;
     if (!preSession?.aadhaarHash || !preSession?.mobile) {
-      return res.status(400).json({ isOk: false, message: "Session expired. Start over." });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Session expired. Start over." });
     }
 
     const { aadhaarHash, mobile } = preSession;
 
     const otpDoc = await Otp.findOne({ phone: mobile, type: "aadhaar_otp" });
     if (!otpDoc) {
-      return res.status(400).json({ isOk: false, message: "OTP expired. Request a new one." });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "OTP expired. Request a new one." });
     }
 
     if (otpDoc.attempts >= MAX_OTP_ATTEMPTS) {
@@ -124,7 +137,10 @@ export const verifyAadhaarOtp = async (req, res) => {
 
     await Otp.deleteOne({ _id: otpDoc._id });
 
-    let candidate = await Candidate.findOne({ aadhaarHash, tenantId: req.tenantId });
+    let candidate = await Candidate.findOne({
+      aadhaarHash,
+      tenantId: req.tenantId,
+    });
 
     if (!candidate) {
       const registrationId = await generateRegistrationId(req.tenantId);
@@ -140,7 +156,7 @@ export const verifyAadhaarOtp = async (req, res) => {
 
     // Session fixation prevention
     await new Promise((resolve, reject) =>
-      req.session.regenerate((err) => (err ? reject(err) : resolve()))
+      req.session.regenerate((err) => (err ? reject(err) : resolve())),
     );
 
     req.session.candidate = {
@@ -157,7 +173,9 @@ export const verifyAadhaarOtp = async (req, res) => {
     });
   } catch (err) {
     console.error("verifyAadhaarOtp error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -168,14 +186,27 @@ export const getMyProfile = async (req, res) => {
     return res.status(200).json({ isOk: true, data: req.candidate });
   } catch (err) {
     console.error("getMyProfile error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
 // ── Step Save ──────────────────────────────────────────────────────────────────
 
 const STEP_FIELDS = {
-  2: ["name", "fatherName", "dob", "gender", "category", "nationality", "religion", "maritalStatus", "exServiceman", "motherTongue"],
+  2: [
+    "name",
+    "fatherName",
+    "dob",
+    "gender",
+    "category",
+    "nationality",
+    "religion",
+    "maritalStatus",
+    "exServiceman",
+    "motherTongue",
+  ],
   3: ["email", "altMobile"],
   4: ["permanentAddress", "currentAddress", "currentSameAsPermanent"],
   5: ["qualification"],
@@ -194,11 +225,13 @@ export const saveStep = async (req, res) => {
 
     if (candidate.registrationCompleted) {
       const editExpired =
-        candidate.editWindowExpiresAt && candidate.editWindowExpiresAt < new Date();
+        candidate.editWindowExpiresAt &&
+        candidate.editWindowExpiresAt < new Date();
       if (editExpired) {
         return res.status(403).json({
           isOk: false,
-          message: "Edit window has expired (48 hours). Contact the exam authority.",
+          message:
+            "Edit window has expired (48 hours). Contact the exam authority.",
         });
       }
     }
@@ -221,7 +254,7 @@ export const saveStep = async (req, res) => {
     const updated = await Candidate.findByIdAndUpdate(
       candidate._id,
       { $set: update },
-      { new: true, select: "-passwordHash -aadhaarHash" }
+      { new: true, select: "-passwordHash -aadhaarHash" },
     );
 
     req.session.candidate.step = maxStep;
@@ -229,7 +262,9 @@ export const saveStep = async (req, res) => {
     return res.status(200).json({ isOk: true, data: updated });
   } catch (err) {
     console.error("saveStep error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -238,16 +273,21 @@ export const saveStep = async (req, res) => {
 export const uploadPhoto = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ isOk: false, message: "No photo uploaded" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "No photo uploaded" });
     }
 
     const candidate = req.candidate;
 
     if (candidate.registrationCompleted) {
       const editExpired =
-        candidate.editWindowExpiresAt && candidate.editWindowExpiresAt < new Date();
+        candidate.editWindowExpiresAt &&
+        candidate.editWindowExpiresAt < new Date();
       if (editExpired) {
-        return res.status(403).json({ isOk: false, message: "Edit window has expired" });
+        return res
+          .status(403)
+          .json({ isOk: false, message: "Edit window has expired" });
       }
     }
 
@@ -259,29 +299,36 @@ export const uploadPhoto = async (req, res) => {
           otrStep: Math.max(candidate.otrStep, 8),
         },
       },
-      { new: true, select: "-passwordHash -aadhaarHash" }
+      { new: true, select: "-passwordHash -aadhaarHash" },
     );
 
     return res.status(200).json({ isOk: true, data: updated });
   } catch (err) {
     console.error("uploadPhoto error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
 export const uploadSignature = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ isOk: false, message: "No signature uploaded" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "No signature uploaded" });
     }
 
     const candidate = req.candidate;
 
     if (candidate.registrationCompleted) {
       const editExpired =
-        candidate.editWindowExpiresAt && candidate.editWindowExpiresAt < new Date();
+        candidate.editWindowExpiresAt &&
+        candidate.editWindowExpiresAt < new Date();
       if (editExpired) {
-        return res.status(403).json({ isOk: false, message: "Edit window has expired" });
+        return res
+          .status(403)
+          .json({ isOk: false, message: "Edit window has expired" });
       }
     }
 
@@ -293,13 +340,15 @@ export const uploadSignature = async (req, res) => {
           otrStep: Math.max(candidate.otrStep, 9),
         },
       },
-      { new: true, select: "-passwordHash -aadhaarHash" }
+      { new: true, select: "-passwordHash -aadhaarHash" },
     );
 
     return res.status(200).json({ isOk: true, data: updated });
   } catch (err) {
     console.error("uploadSignature error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -324,7 +373,9 @@ export const submitRegistration = async (req, res) => {
       const captchaRes = await fetch(verifyUrl, { method: "POST" });
       const captchaData = await captchaRes.json();
       if (!captchaData.success) {
-        return res.status(400).json({ isOk: false, message: "CAPTCHA verification failed" });
+        return res
+          .status(400)
+          .json({ isOk: false, message: "CAPTCHA verification failed" });
       }
     } else if (captchaSecret && !captchaToken) {
       return res.status(400).json({ isOk: false, message: "CAPTCHA required" });
@@ -337,7 +388,9 @@ export const submitRegistration = async (req, res) => {
       });
     }
     if (password !== confirmPassword) {
-      return res.status(400).json({ isOk: false, message: "Passwords do not match" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Passwords do not match" });
     }
 
     const fullCandidate = await Candidate.findById(candidate._id);
@@ -349,7 +402,9 @@ export const submitRegistration = async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-    const editWindowExpiresAt = new Date(Date.now() + EDIT_WINDOW_HOURS * 60 * 60 * 1000);
+    const editWindowExpiresAt = new Date(
+      Date.now() + EDIT_WINDOW_HOURS * 60 * 60 * 1000,
+    );
 
     await Candidate.findByIdAndUpdate(candidate._id, {
       $set: {
@@ -362,7 +417,7 @@ export const submitRegistration = async (req, res) => {
 
     await sendSmsText(
       fullCandidate.mobile,
-      `Registration complete! Your NagarPalika Registration ID: ${fullCandidate.registrationId}. Keep it safe.`
+      `Registration complete! Your NagarPalika Registration ID: ${fullCandidate.registrationId}. Keep it safe.`,
     );
 
     return res.status(200).json({
@@ -373,7 +428,9 @@ export const submitRegistration = async (req, res) => {
     });
   } catch (err) {
     console.error("submitRegistration error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -384,7 +441,10 @@ export const candidateLogin = async (req, res) => {
     const { registrationId, password } = req.body;
 
     if (!registrationId || !password) {
-      return res.status(400).json({ isOk: false, message: "Registration ID and password required" });
+      return res.status(400).json({
+        isOk: false,
+        message: "Registration ID and password required",
+      });
     }
 
     const candidate = await Candidate.findOne({
@@ -401,19 +461,26 @@ export const candidateLogin = async (req, res) => {
     }
 
     if (candidate.lockoutUntil && candidate.lockoutUntil > new Date()) {
-      const remaining = Math.ceil((candidate.lockoutUntil - Date.now()) / 60000);
+      const remaining = Math.ceil(
+        (candidate.lockoutUntil - Date.now()) / 60000,
+      );
       return res.status(423).json({
         isOk: false,
         message: `Account locked. Try again in ${remaining} minute(s).`,
       });
     }
 
-    const passwordMatch = await bcrypt.compare(password, candidate.passwordHash);
+    const passwordMatch = await bcrypt.compare(
+      password,
+      candidate.passwordHash,
+    );
 
     if (!passwordMatch) {
       candidate.loginAttempts = (candidate.loginAttempts || 0) + 1;
       if (candidate.loginAttempts >= MAX_LOGIN_ATTEMPTS) {
-        candidate.lockoutUntil = new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000);
+        candidate.lockoutUntil = new Date(
+          Date.now() + LOCKOUT_MINUTES * 60 * 1000,
+        );
         candidate.loginAttempts = 0;
       }
       await candidate.save();
@@ -423,20 +490,23 @@ export const candidateLogin = async (req, res) => {
       });
     }
 
-    if (candidate.loginAttempts > 0 || candidate.lockoutUntil) {
-      candidate.loginAttempts = 0;
-      candidate.lockoutUntil = undefined;
-      await candidate.save();
-    }
+    candidate.loginAttempts = 0;
+    candidate.lockoutUntil = undefined;
+
+    // Single-session enforcement — PRD §9.1: new login invalidates old session
+    const sessionToken = crypto.randomBytes(32).toString("hex");
+    candidate.activeSessionId = sessionToken;
+    await candidate.save();
 
     await new Promise((resolve, reject) =>
-      req.session.regenerate((err) => (err ? reject(err) : resolve()))
+      req.session.regenerate((err) => (err ? reject(err) : resolve())),
     );
 
     req.session.candidate = {
       candidateId: candidate._id.toString(),
       registrationId: candidate.registrationId,
       tenantId: req.tenantId,
+      sessionToken,
     };
 
     return res.status(200).json({
@@ -452,20 +522,24 @@ export const candidateLogin = async (req, res) => {
     });
   } catch (err) {
     console.error("candidateLogin error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
 export const candidateLogout = async (req, res) => {
   try {
     await new Promise((resolve, reject) =>
-      req.session.destroy((err) => (err ? reject(err) : resolve()))
+      req.session.destroy((err) => (err ? reject(err) : resolve())),
     );
     res.clearCookie("sessionId");
     return res.status(200).json({ isOk: true, message: "Logged out" });
   } catch (err) {
     console.error("candidateLogout error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };
 
@@ -476,10 +550,14 @@ export const findRegistration = async (req, res) => {
     const { aadhaar, mobile } = req.body;
 
     if (!aadhaar || !/^\d{12}$/.test(aadhaar.trim())) {
-      return res.status(400).json({ isOk: false, message: "Invalid Aadhaar number" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid Aadhaar number" });
     }
     if (!mobile || !/^\d{10}$/.test(mobile.trim())) {
-      return res.status(400).json({ isOk: false, message: "Invalid mobile number" });
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid mobile number" });
     }
 
     const aadhaarHash = hashAadhaar(aadhaar);
@@ -493,7 +571,7 @@ export const findRegistration = async (req, res) => {
     if (candidate && candidate.mobile === mobile.trim()) {
       await sendSmsText(
         mobile.trim(),
-        `Your NagarPalika Registration ID: ${candidate.registrationId}`
+        `Your NagarPalika Registration ID: ${candidate.registrationId}`,
       );
     }
 
@@ -505,6 +583,8 @@ export const findRegistration = async (req, res) => {
     });
   } catch (err) {
     console.error("findRegistration error:", err);
-    return res.status(500).json({ isOk: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error" });
   }
 };

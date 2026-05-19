@@ -2,6 +2,7 @@ import EmployeeModels from "../../models/Employee.js";
 import CompanyMaster from "../../models/CompanyMaster.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import { generateSecret, generateURI, verify as totpVerify } from "otplib";
 
 export const createEmployee = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ export const createEmployee = async (req, res) => {
       isActive,
     } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const existingEmployee = await EmployeeModels.findOne({
       emailOffice: emailOffice,
@@ -362,9 +363,12 @@ export const listAllEmployeesByDepartment = async (req, res) => {
   }
 };
 
+const ADMIN_MAX_ATTEMPTS = 3;
+const ADMIN_LOCKOUT_MINUTES = 30;
+
 export const loginEmployee = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, totpToken } = req.body;
 
     const employee = await EmployeeModels.findOne({ emailOffice: email })
       .populate("departmentId")
@@ -375,31 +379,79 @@ export const loginEmployee = async (req, res) => {
       .exec();
 
     if (!employee) {
-      return res.status(401).json({
+      return res
+        .status(401)
+        .json({ isOk: false, message: "Invalid credentials", status: 401 });
+    }
+
+    // IP whitelist check — PRD §5.8.1, §9.1
+    if (employee.ipWhitelist && employee.ipWhitelist.length > 0) {
+      const clientIp = req.ip || req.connection?.remoteAddress || "";
+      const normalised = clientIp.replace("::ffff:", "");
+      if (!employee.ipWhitelist.includes(normalised)) {
+        return res
+          .status(403)
+          .json({ isOk: false, message: "Access denied", status: 403 });
+      }
+    }
+
+    // Brute-force lockout — PRD §9.1 (3 attempts → 30 min for admin)
+    if (employee.lockoutUntil && employee.lockoutUntil > new Date()) {
+      return res.status(429).json({
         isOk: false,
-        message: "Invalid credentials",
-        status: 401,
+        message: "Account locked. Try again later.",
+        status: 429,
       });
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, employee.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
-        isOk: false,
-        message: "Invalid credentials",
-        error: "Invalid credentials",
-        status: 401,
-      });
+      employee.loginAttempts = (employee.loginAttempts || 0) + 1;
+      if (employee.loginAttempts >= ADMIN_MAX_ATTEMPTS) {
+        employee.lockoutUntil = new Date(
+          Date.now() + ADMIN_LOCKOUT_MINUTES * 60 * 1000,
+        );
+        employee.loginAttempts = 0;
+      }
+      await employee.save();
+      return res
+        .status(401)
+        .json({ isOk: false, message: "Invalid credentials", status: 401 });
     }
 
-    // Store user data in express session (in-memory)
+    // 2FA — PRD §9.1, §5.8.1
+    if (employee.twoFactorEnabled) {
+      if (!totpToken) {
+        return res.status(200).json({
+          isOk: true,
+          requiresTwoFactor: true,
+          message: "Enter your authenticator app code",
+          status: 200,
+        });
+      }
+      const valid = totpVerify({
+        token: totpToken,
+        secret: employee.twoFactorSecret,
+      });
+      if (!valid) {
+        return res
+          .status(401)
+          .json({ isOk: false, message: "Invalid 2FA code", status: 401 });
+      }
+    }
+
+    // Reset lockout counters on successful login
+    employee.loginAttempts = 0;
+    employee.lockoutUntil = undefined;
+    await employee.save();
+
     req.session.user = {
       id: employee._id.toString(),
-      role: "EMPLOYEE",
+      role: employee.roleId?.roleName || "EMPLOYEE",
       email: employee.emailOffice,
       name: employee.employeeName,
+      departmentId: employee.departmentId?._id?.toString(),
     };
 
     return res.status(200).json({
@@ -409,12 +461,81 @@ export const loginEmployee = async (req, res) => {
       status: 200,
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      isOk: false,
-      message: error.message,
-      status: 500,
+    console.error("loginEmployee error:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const setupTwoFactor = async (req, res) => {
+  try {
+    const employee = await EmployeeModels.findById(req.user.id);
+    if (!employee) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Employee not found", status: 404 });
+    }
+
+    const secret = generateSecret();
+    const otpauth = generateURI({
+      secret,
+      account: employee.emailOffice,
+      issuer: "NagarPalika Admin",
+      type: "totp",
     });
+
+    employee.twoFactorSecret = secret;
+    await employee.save();
+
+    return res
+      .status(200)
+      .json({ isOk: true, data: { otpauth, secret }, status: 200 });
+  } catch (error) {
+    console.error("setupTwoFactor error:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const enableTwoFactor = async (req, res) => {
+  try {
+    const { totpToken } = req.body;
+    const employee = await EmployeeModels.findById(req.user.id);
+    if (!employee) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Employee not found", status: 404 });
+    }
+
+    if (!employee.twoFactorSecret) {
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Run setup first", status: 400 });
+    }
+
+    const valid = totpVerify({
+      token: totpToken,
+      secret: employee.twoFactorSecret,
+    });
+    if (!valid) {
+      return res
+        .status(400)
+        .json({ isOk: false, message: "Invalid code", status: 400 });
+    }
+
+    employee.twoFactorEnabled = true;
+    await employee.save();
+
+    return res
+      .status(200)
+      .json({ isOk: true, message: "2FA enabled", status: 200 });
+  } catch (error) {
+    console.error("enableTwoFactor error:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
   }
 };
 
@@ -501,7 +622,7 @@ export const logoutUser = async (req, res) => {
       }
 
       // Clear the session cookie
-      res.clearCookie('sessionId');
+      res.clearCookie("sessionId");
 
       return res.status(200).json({
         isOk: true,
@@ -517,7 +638,7 @@ export const logoutUser = async (req, res) => {
       status: 500,
     });
   }
-}
+};
 
 /**
  * Verify session - lightweight endpoint to check if session is valid
@@ -546,7 +667,7 @@ export const resetPassword = async (req, res) => {
         status: 400,
       });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     employee.password = hashedPassword;
 

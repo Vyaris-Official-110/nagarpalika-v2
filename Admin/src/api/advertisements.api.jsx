@@ -16,11 +16,22 @@ export const publishAdvertisement = (id) =>
 export const closeAdvertisement = (id) =>
     api.patch(ENDPOINTS.ADVERTISEMENTS.CLOSE(id));
 
+export const archiveAdvertisement = (id) =>
+    api.patch(ENDPOINTS.ADVERTISEMENTS.ARCHIVE(id));
+
 export const deleteAdvertisement = (id) =>
     api.delete(ENDPOINTS.ADVERTISEMENTS.BY_ID(id));
 
 export const searchAdvertisements = (params) =>
     api.post(ENDPOINTS.ADVERTISEMENTS.SEARCH, params);
+
+export const uploadAdvertisementPdf = (id, file) => {
+    const fd = new FormData();
+    fd.append('pdf', file);
+    return api.post(ENDPOINTS.ADVERTISEMENTS.UPLOAD_PDF(id), fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+};
 
 export default {
     createAdvertisement,

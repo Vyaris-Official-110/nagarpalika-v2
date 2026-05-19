@@ -40,7 +40,12 @@ router.post("/otr/find", findRegistration);
 router.get("/otr/me", candidateAuth, getMyProfile);
 router.put("/otr/step/:step", candidateAuth, saveStep);
 router.post("/otr/upload/photo", candidateAuth, photoUpload, uploadPhoto);
-router.post("/otr/upload/signature", candidateAuth, signatureUpload, uploadSignature);
+router.post(
+  "/otr/upload/signature",
+  candidateAuth,
+  signatureUpload,
+  uploadSignature,
+);
 router.post("/otr/submit", candidateAuth, submitRegistration);
 router.post("/otr/logout", candidateAuth, candidateLogout);
 

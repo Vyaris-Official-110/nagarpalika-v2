@@ -1,4 +1,6 @@
 import Advertisement from "../../models/Advertisement.js";
+import path from "path";
+import fs from "fs";
 
 export const createAdvertisement = async (req, res) => {
   try {
@@ -19,19 +21,32 @@ export const createAdvertisement = async (req, res) => {
       tenantId: req.tenantId,
     });
     if (existing) {
+      return res.status(400).json({
+        isOk: false,
+        message: "Advertisement number already exists",
+        status: 400,
+      });
+    }
+
+    // DEPT_ADMIN scope — PRD §9.3: DEPT_ADMIN can only create advts for own department
+    const effectiveDeptId = req.scopedDepartmentId ?? departmentId;
+    if (
+      req.scopedDepartmentId &&
+      req.scopedDepartmentId.toString() !== departmentId?.toString()
+    ) {
       return res
-        .status(400)
+        .status(403)
         .json({
           isOk: false,
-          message: "Advertisement number already exists",
-          status: 400,
+          message: "You can only create advertisements for your department",
+          status: 403,
         });
     }
 
     const advertisement = new Advertisement({
       advtNo,
       postTitle,
-      departmentId,
+      departmentId: effectiveDeptId,
       postClass,
       payScale,
       vacancies,
@@ -43,13 +58,11 @@ export const createAdvertisement = async (req, res) => {
 
     await advertisement.save();
 
-    return res
-      .status(201)
-      .json({
-        isOk: true,
-        message: "Advertisement created successfully",
-        status: 201,
-      });
+    return res.status(201).json({
+      isOk: true,
+      message: "Advertisement created successfully",
+      status: 201,
+    });
   } catch (error) {
     console.error("Error in createAdvertisement:", error);
     return res
@@ -73,11 +86,12 @@ export const updateAdvertisement = async (req, res) => {
       pdfPath,
     } = req.body;
 
-    const advertisement = await Advertisement.findOne({
-      _id: id,
-      tenantId: req.tenantId,
-      isDeleted: false,
-    });
+    const baseFilter = { _id: id, tenantId: req.tenantId, isDeleted: false };
+    // DEPT_ADMIN scope — PRD §9.3
+    if (req.scopedDepartmentId)
+      baseFilter.departmentId = req.scopedDepartmentId;
+
+    const advertisement = await Advertisement.findOne(baseFilter);
     if (!advertisement) {
       return res
         .status(404)
@@ -85,13 +99,11 @@ export const updateAdvertisement = async (req, res) => {
     }
 
     if (advertisement.status === "published") {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Cannot edit a published advertisement",
-          status: 400,
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Cannot edit a published advertisement",
+        status: 400,
+      });
     }
 
     Object.assign(advertisement, {
@@ -108,13 +120,11 @@ export const updateAdvertisement = async (req, res) => {
 
     await advertisement.save();
 
-    return res
-      .status(200)
-      .json({
-        isOk: true,
-        message: "Advertisement updated successfully",
-        status: 200,
-      });
+    return res.status(200).json({
+      isOk: true,
+      message: "Advertisement updated successfully",
+      status: 200,
+    });
   } catch (error) {
     console.error("Error in updateAdvertisement:", error);
     return res
@@ -139,13 +149,11 @@ export const publishAdvertisement = async (req, res) => {
     }
 
     if (advertisement.status === "published") {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Advertisement already published",
-          status: 400,
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Advertisement already published",
+        status: 400,
+      });
     }
 
     advertisement.status = "published";
@@ -191,6 +199,43 @@ export const closeAdvertisement = async (req, res) => {
   }
 };
 
+export const archiveAdvertisement = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const advertisement = await Advertisement.findOne({
+      _id: id,
+      tenantId: req.tenantId,
+      isDeleted: false,
+    });
+    if (!advertisement) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Advertisement not found", status: 404 });
+    }
+
+    if (advertisement.status !== "closed") {
+      return res.status(400).json({
+        isOk: false,
+        message: "Only closed advertisements can be archived",
+        status: 400,
+      });
+    }
+
+    advertisement.status = "archived";
+    await advertisement.save();
+
+    return res
+      .status(200)
+      .json({ isOk: true, message: "Advertisement archived", status: 200 });
+  } catch (error) {
+    console.error("Error in archiveAdvertisement:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
 export const deleteAdvertisement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -207,25 +252,21 @@ export const deleteAdvertisement = async (req, res) => {
     }
 
     if (advertisement.status === "published") {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Cannot delete a published advertisement",
-          status: 400,
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Cannot delete a published advertisement",
+        status: 400,
+      });
     }
 
     advertisement.isDeleted = true;
     await advertisement.save();
 
-    return res
-      .status(200)
-      .json({
-        isOk: true,
-        message: "Advertisement deleted successfully",
-        status: 200,
-      });
+    return res.status(200).json({
+      isOk: true,
+      message: "Advertisement deleted successfully",
+      status: 200,
+    });
   } catch (error) {
     console.error("Error in deleteAdvertisement:", error);
     return res
@@ -282,6 +323,110 @@ export const listAdvertisements = async (req, res) => {
   }
 };
 
+export const uploadAdvertisementPdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ isOk: false, message: "No PDF uploaded", status: 400 });
+    }
+
+    const advertisement = await Advertisement.findOne({
+      _id: id,
+      tenantId: req.tenantId,
+      isDeleted: false,
+    });
+    if (!advertisement) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Advertisement not found", status: 404 });
+    }
+
+    // Remove old PDF if present
+    if (advertisement.pdfPath) {
+      const oldPath = path.join(
+        global.__basedir,
+        "uploads",
+        "advertisements",
+        advertisement.pdfPath,
+      );
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    advertisement.pdfPath = req.file.filename;
+    await advertisement.save();
+
+    return res
+      .status(200)
+      .json({
+        isOk: true,
+        message: "PDF uploaded",
+        pdfPath: req.file.filename,
+        status: 200,
+      });
+  } catch (error) {
+    console.error("Error in uploadAdvertisementPdf:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const serveAdvertisementPdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const advertisement = await Advertisement.findOne({
+      _id: id,
+      tenantId: req.tenantId,
+      isDeleted: false,
+      status: "published",
+    });
+
+    if (!advertisement || !advertisement.pdfPath) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "PDF not found", status: 404 });
+    }
+
+    const filePath = path.join(
+      global.__basedir,
+      "uploads",
+      "advertisements",
+      advertisement.pdfPath,
+    );
+    if (!fs.existsSync(filePath)) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "PDF file not found", status: 404 });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${advertisement.advtNo}.pdf"`,
+    );
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("Error in serveAdvertisementPdf:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const bulkExportZip = async (req, res) => {
+  // Stub — requires P4 Application data; returns 501 until P4 is complete
+  return res.status(501).json({
+    isOk: false,
+    message:
+      "Bulk ZIP export available after P4 Application module is complete",
+    status: 501,
+  });
+};
+
 export const listAdvertisementsByParams = async (req, res) => {
   try {
     let {
@@ -309,7 +454,7 @@ export const listAdvertisementsByParams = async (req, res) => {
           as: "department",
         },
       },
-      { $unwind: { path: "$department", preserveNullAndEmpty: true } },
+      { $unwind: { path: "$department", preserveNullAndEmptyArrays: true } },
       {
         $facet: {
           stage1: [{ $group: { _id: null, count: { $sum: 1 } } }],

@@ -912,3 +912,81 @@ table.ojas { min-width: 540px; }
   .otr-step-line { width: 8px; }
   .otr-step-num { width: 20px; height: 20px; font-size: 10px; }
 }
+
+/* ── Branding bar — PRD §3.1 ────────────────────────────────────────────── */
+.branding-bar {
+  background: var(--ojas-navy);
+  color: #fff;
+  border-bottom: 3px solid var(--ojas-saffron);
+}
+.branding-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+}
+.branding-emblem,
+.branding-logo {
+  height: 52px;
+  width: auto;
+  flex-shrink: 0;
+}
+.branding-text { flex: 1; }
+.branding-name-en {
+  font: 700 15px/1.3 var(--font-sans);
+  letter-spacing: .3px;
+}
+.branding-name-gu {
+  font-size: 14px;
+  line-height: 1.4;
+  opacity: .9;
+}
+.branding-dept {
+  font-size: 11px;
+  opacity: .75;
+  margin-top: 2px;
+}
+
+/* ── Ticker bars — PRD §3.1 ─────────────────────────────────────────────── */
+.ticker-bar {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  font: 700 12px/1 var(--font-sans);
+}
+.ticker-helpline {
+  background: var(--ojas-cream);
+  border-bottom: 1px solid var(--ojas-border);
+  color: var(--ojas-navy);
+}
+.ticker-otr {
+  background: var(--ojas-saffron);
+  color: #fff;
+}
+.ticker-label {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  background: rgba(0,0,0,.15);
+  letter-spacing: .5px;
+  font-size: 10px;
+}
+.ticker-scroll {
+  overflow: hidden;
+  flex: 1;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+.ticker-scroll span {
+  display: inline-block;
+  animation: ticker-move 30s linear infinite;
+}
+.ticker-scroll a { color: inherit; text-decoration: underline; }
+@keyframes ticker-move {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(-100%); }
+}
+@media (max-width: 768px) {
+  .branding-bar-inner { gap: 8px; padding: 8px 10px; }
+  .branding-emblem, .branding-logo { height: 38px; }
+  .branding-name-en { font-size: 13px; }
+}

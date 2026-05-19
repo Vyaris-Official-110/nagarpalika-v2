@@ -1,4 +1,5 @@
 import Candidate from "../../models/Candidate.js";
+import { Parser } from "json2csv";
 
 export const listCandidates = async (req, res) => {
   try {
@@ -83,6 +84,56 @@ export const getCandidateById = async (req, res) => {
     return res.status(200).json({ isOk: true, data: candidate, status: 200 });
   } catch (error) {
     console.error("Error in getCandidateById:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+// CSV / Excel export — PRD §5.8.4
+export const exportCandidates = async (req, res) => {
+  try {
+    const { format = "csv", category, registrationCompleted } = req.query;
+
+    const filter = { tenantId: req.tenantId };
+    if (category) filter.category = category;
+    if (registrationCompleted !== undefined)
+      filter.registrationCompleted = registrationCompleted === "true";
+
+    const candidates = await Candidate.find(filter, {
+      registrationId: 1,
+      name: 1,
+      fatherName: 1,
+      dob: 1,
+      gender: 1,
+      category: 1,
+      mobile: 1,
+      email: 1,
+      registrationCompleted: 1,
+      createdAt: 1,
+    }).lean();
+
+    const fields = [
+      "registrationId",
+      "name",
+      "fatherName",
+      "dob",
+      "gender",
+      "category",
+      "mobile",
+      "email",
+      "registrationCompleted",
+      "createdAt",
+    ];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(candidates);
+
+    const filename = `candidates_${Date.now()}.csv`;
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    return res.status(200).send(csv);
+  } catch (error) {
+    console.error("Error in exportCandidates:", error);
     return res
       .status(500)
       .json({ isOk: false, message: "Internal server error", status: 500 });

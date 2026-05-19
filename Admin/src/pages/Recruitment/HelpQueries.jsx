@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Card, CardBody, CardHeader, Col, Container, Row } from "reactstrap";
 import DataTable from "react-data-table-component";
-import { useNavigate } from "react-router-dom";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
-import DeleteModal from "../../Components/Common/DeleteModal";
 import FormsHeader from "../../Components/Common/FormsModalHeader";
 import { toast } from "react-toastify";
 import { AuthContext } from "../../context/AuthContext";
-import { MenuContext } from "../../context/MenuContext";
-import { searchNotices, deleteNotice, publishNotice } from "../../api/notices.api";
+import { searchHelpQueries, updateQueryStatus } from "../../api/helpQuery.api";
 
-const STATUS_BADGE = { draft: "warning", published: "success" };
+const STATUS_BADGE = { open: "warning", replied: "info", closed: "secondary" };
+const STATUS_OPTIONS = ["open", "replied", "closed"];
 
-const Notices = () => {
+const HelpQueries = () => {
     const { adminData } = useContext(AuthContext);
-    const { currentPagePermissions } = useContext(MenuContext);
-    const navigate = useNavigate();
 
     const [query, setQuery] = useState("");
     const [rows, setRows] = useState([]);
@@ -25,9 +21,6 @@ const Notices = () => {
     const [pageNo, setPageNo] = useState(0);
     const [column, setColumn] = useState();
     const [sortDir, setSortDir] = useState();
-    const [removeId, setRemoveId] = useState("");
-    const [modalDelete, setModalDelete] = useState(false);
-    const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => { fetchData(); }, [pageNo, perPage, column, sortDir, query]);
 
@@ -36,7 +29,7 @@ const Notices = () => {
         let skip = (pageNo - 1) * perPage;
         if (skip < 0) skip = 0;
         try {
-            const res = await searchNotices({ skip, per_page: perPage, sorton: column, sortdir: sortDir, match: query });
+            const res = await searchHelpQueries({ skip, per_page: perPage, sorton: column, sortdir: sortDir, match: query });
             if (res.data.data.length > 0) {
                 setRows(res.data.data[0].data);
                 setTotalRows(res.data.data[0].count);
@@ -44,72 +37,71 @@ const Notices = () => {
                 setRows([]);
             }
         } catch {
-            toast.error("Failed to load notices.");
+            toast.error("Failed to load help queries.");
             setRows([]);
         }
         setLoading(false);
     };
 
-    const handleDelete = (e) => {
-        e.preventDefault();
-        setDeleteLoading(true);
-        deleteNotice(removeId)
-            .then(() => { setModalDelete(false); fetchData(); toast.success("Notice deleted."); })
-            .catch(() => { setModalDelete(false); toast.error("Delete failed."); })
-            .finally(() => setDeleteLoading(false));
-    };
-
-    const handlePublish = (id) => {
-        publishNotice(id)
-            .then(() => { fetchData(); toast.success("Notice published."); })
-            .catch(() => toast.error("Publish failed."));
+    const handleStatusChange = (id, status) => {
+        updateQueryStatus(id, status)
+            .then(() => { fetchData(); toast.success("Status updated."); })
+            .catch(() => toast.error("Status update failed."));
     };
 
     const col = [
         { name: "Sr", selector: (_, i) => i + 1, maxWidth: "50px" },
-        { name: "Title", selector: (r) => r.title, sortable: true, sortField: "title", minWidth: "200px" },
-        { name: "Type", selector: (r) => r.type, maxWidth: "120px" },
-        { name: "Ref No", selector: (r) => r.refNo || "—", minWidth: "110px" },
-        { name: "Published At", selector: (r) => r.publishedAt ? new Date(r.publishedAt).toLocaleDateString("en-IN") : "—", minWidth: "120px" },
+        { name: "Name", selector: (r) => r.name, sortable: true, sortField: "name", minWidth: "140px" },
+        { name: "Subject", selector: (r) => r.subject, sortable: true, sortField: "subject", minWidth: "180px" },
+        { name: "Mobile", selector: (r) => r.mobile || "—", maxWidth: "120px" },
+        { name: "Email", selector: (r) => r.email || "—", minWidth: "160px" },
+        { name: "Message", selector: (r) => r.message, minWidth: "220px", wrap: true },
         {
             name: "Status",
+            maxWidth: "120px",
             selector: (r) => (
                 <span className={`badge bg-${STATUS_BADGE[r.status] ?? "secondary"}`}>{r.status}</span>
             ),
-            maxWidth: "90px",
+        },
+        {
+            name: "Date",
+            selector: (r) => r.createdAt ? new Date(r.createdAt).toLocaleDateString("en-IN") : "—",
+            sortable: true,
+            sortField: "createdAt",
+            minWidth: "110px",
         },
         {
             name: "Action",
-            minWidth: "200px",
+            minWidth: "160px",
             selector: (r) => (
-                <div className="d-flex gap-1">
-                    {currentPagePermissions.edit && r.status === "draft" && (
-                        <button className="btn btn-sm btn-primary" onClick={() => handlePublish(r._id)}>Publish</button>
-                    )}
-                    {currentPagePermissions.delete && (
-                        <button className="btn btn-sm btn-danger" onClick={() => { setModalDelete(true); setRemoveId(r._id); }}>Delete</button>
-                    )}
-                </div>
+                <select
+                    className="form-select form-select-sm"
+                    value={r.status}
+                    onChange={(e) => handleStatusChange(r._id, e.target.value)}
+                >
+                    {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
+                </select>
             ),
         },
     ];
 
-    document.title = `Notices | ${adminData?.companyName}`;
+    document.title = `Help Queries | ${adminData?.companyName}`;
 
     return (
         <React.Fragment>
             <div className="page-content">
                 <Container fluid>
-                    <BreadCrumb maintitle="Recruitment" title="Notices" pageTitle="Recruitment" />
+                    <BreadCrumb maintitle="Recruitment" title="Help Queries" pageTitle="Recruitment" />
                     <Row>
                         <Col lg={12}>
                             <Card>
                                 <CardHeader>
                                     <FormsHeader
-                                        formName="Notice"
-                                        tog_list={() => navigate("/notice/add")}
+                                        formName="Help Query"
                                         setQuery={setQuery}
-                                        showAddButton={currentPagePermissions.write}
+                                        showAddButton={false}
                                     />
                                 </CardHeader>
                                 <CardBody>
@@ -135,15 +127,8 @@ const Notices = () => {
                     </Row>
                 </Container>
             </div>
-            <DeleteModal
-                show={modalDelete}
-                handleDelete={handleDelete}
-                toggle={() => setModalDelete(false)}
-                setmodal_delete={setModalDelete}
-                disabled={deleteLoading}
-            />
         </React.Fragment>
     );
 };
 
-export default Notices;
+export default HelpQueries;

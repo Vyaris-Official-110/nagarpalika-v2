@@ -16,6 +16,7 @@ const noticeSchema = new mongoose.Schema(
       ],
       required: true,
     },
+    body: { type: String, default: "" }, // rich text body — PRD §5.8.3
     refNo: { type: String, trim: true, default: "" },
     publishedAt: { type: Date, default: Date.now },
     expiresAt: { type: Date },
