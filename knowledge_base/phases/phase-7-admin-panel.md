@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 7 of 9 |
-| **Status** | 🟡 Partially Complete — infrastructure done, recruitment pages missing |
+| **Status** | 🟢 Complete (core sub-modules) — 6 recruitment pages + controllers + routes + dashboard shipped. Bulk ZIP export + CSV roll-number upload not yet built. |
 | **Depends On** | Phase 1 (recruitment models must exist before pages can query them) |
 | **Blocks** | Phase 6 (call letter publish), Phase 8 (notifications use admin-managed data) |
 | **PRD Sections** | §5 M8 Administrator Panel · §9.1 Auth · §9.3 Authorization · §9.12 Audit Logging |
@@ -28,9 +28,20 @@
 | WhatsApp config + message log | `Admin/src/pages/WhatsApp/WhatsAppMessages.jsx` |
 | Email Setup / For / Template | `Admin/src/pages/CMS/` |
 | Nagar Palika Details (CompanyDetails) | `Admin/src/pages/Setup/CompanyDetails.jsx` |
-| Dashboard (stub — needs real data from Phase 1) | `Admin/src/pages/Dashboard/Dashboard.jsx` |
-| Reports (stub — needs recruitment data from Phase 1) | `Admin/src/pages/Reports/Reports.jsx` |
-| Clean recruitment menu (7 groups) | `Admin/src/Layouts/LayoutMenuData.jsx` |
+| Dashboard — real recruitment stats (activeAdvt, totalCandidates, totalApplications, feesCollected) | `Admin/src/pages/Dashboard/Dashboard.jsx` |
+| Reports (stub — needs recruitment data) | `Admin/src/pages/Reports/Reports.jsx` |
+| Recruitment menu group (6 sub-items) | `Admin/src/Layouts/LayoutMenuData.jsx` |
+| Advertisements CRUD (list + create + edit + publish + close + delete) | `Admin/src/pages/Recruitment/Advertisements.jsx`, `AdvertisementsForm.jsx` |
+| Candidates list + activate/deactivate | `Admin/src/pages/Recruitment/Candidates.jsx` |
+| Applications list + inline status update | `Admin/src/pages/Recruitment/Applications.jsx` |
+| Fee Payments list (read-only) | `Admin/src/pages/Recruitment/FeePayments.jsx` |
+| Call Letters list + enable/disable toggle | `Admin/src/pages/Recruitment/CallLetters.jsx` |
+| Notices list + publish/delete + create form | `Admin/src/pages/Recruitment/Notices.jsx`, `NoticesForm.jsx` |
+| Analytics controller — real recruitment stats | `Server/controllers/v1/analytics.controller.js` |
+| Candidate controller + routes (search, getById, toggleStatus) | `Server/controllers/v1/candidate.controller.js` |
+| Application controller + routes (search, getById, updateStatus) | `Server/controllers/v1/application.controller.js` |
+| FeePayment controller + routes (search, getById — read-only) | `Server/controllers/v1/feePayment.controller.js` |
+| CallLetter controller + routes (search, getById, update) | `Server/controllers/v1/callLetter.controller.js` |
 | Server auth: 2FA-ready (OTP routes exist), IP whitelist config | `Server/middlewares/authMiddleware.js` |
 | Secure file upload | `Server/middlewares/secureUpload.js` |
 

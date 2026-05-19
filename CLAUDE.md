@@ -84,4 +84,9 @@ After any implementation session:
 3. Remove resolved blockers; add newly discovered ones
 4. **Sync `knowledge_base/INDEX.md`** — update Phase table Status + Remaining Work columns to match this task sheet
 5. **Sync `knowledge_base/tech-stack.md`** — update whichever sections changed (routes, models, API calls status)
-6. Commit both CLAUDE.md + vault files: `chore(claude): update task sheet + vault sync`
+6. **Sync phase file(s) that changed** — for each phase whose status changed this session:
+   - Update the `| **Status** |` header row in `knowledge_base/phases/phase-N-*.md`
+   - Move completed items from `## Remaining Work 🔴` into `## Already Built ✅`
+   - Add newly discovered gaps or deviations as notes at bottom of Remaining Work
+   - PRD file (`prds/nagarpalika-recruitment-portal.md`) — only update if requirements changed
+7. Commit all changed files: `chore(claude): update task sheet + vault sync`

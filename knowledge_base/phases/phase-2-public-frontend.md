@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 2 of 9 |
-| **Status** | 🔴 Not Started — static site exists, zero API integration |
+| **Status** | 🟢 Complete — /careers + /notices API-driven; /help page with FAQ + contact form; nav dropdowns added |
 | **Depends On** | Phase 1 (Advertisement, Notice, Candidate models + routes must exist) |
 | **Blocks** | Phase 3 (nav restructure needed before OTR flow) |
 | **PRD Sections** | §5 M1 Home Page · §10 Existing Frontend Carry-Over |
