@@ -14,6 +14,7 @@ const api = axios.create({
     timeout: 30000,
     headers: {
         "Content-Type": "application/json",
+        ...(import.meta.env.VITE_TENANT_ID && { "x-tenant-id": import.meta.env.VITE_TENANT_ID }),
     },
     withCredentials: true, // Important: Send cookies with all requests
 });

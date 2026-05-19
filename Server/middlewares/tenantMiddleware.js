@@ -22,9 +22,8 @@ export const tenantMiddleware = (req, res, next) => {
 
   if (subdomain && KNOWN_TENANTS.has(subdomain)) {
     req.tenantId = subdomain;
-  } else {
-    req.tenantId = DEFAULT_TENANT;
+    return next();
   }
 
-  next();
+  return res.status(400).json({ isOk: false, error: "Unknown tenant" });
 };
