@@ -1,8 +1,8 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-19 (P1+P2+P7 complete — branch feat/p7-admin-panel)
+> Last updated: 2026-05-19 (P1+P2+P3+P7 complete — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
-> **Current state:** P1 foundation, P2 public frontend, P7 admin panel all shipped. Recruitment models/routes/pages built. OTR/Application/Fee/CallLetter citizen flows not yet started (blocked).
+> **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped. Application/Fee/CallLetter citizen flows blocked.
 
 ---
 
@@ -54,10 +54,34 @@ Nagarpalika/
 | `src/data/i18n.js` | 40+ translation keys × 3 languages (EN/HI/GU) |
 | `src/api/index.js` | Axios instance — base URL from `VITE_API_URL`, `withCredentials: true` |
 
-### What Needs to Be Built (Phase 3+)
+### Routes (P3 added)
 
-- Add `/registration`, `/application`, `/fee` routes (blocked by Q#3, Q#8, Q#7)
-- Nav dropdowns for Registration + Online Application (P3)
+| Path | Component | Status |
+|------|-----------|--------|
+| `/` | `Home.jsx` | Static |
+| `/about` | `About.jsx` | Static |
+| `/careers` | `Careers.jsx` | API-driven |
+| `/notices` | `Notices.jsx` | API-driven |
+| `/help` | `Help.jsx` | API-driven |
+| `/results` | `Results.jsx` | Static (UI-only) |
+| `/callletter` | `CallLetter.jsx` | Static (UI-only) |
+| `/contact` | `Contact.jsx` | Static (UI-only) |
+| `/otr` | `Step1Aadhaar.jsx` | **P3 — OTR start** |
+| `/otr/step/1–10` | `Step1–Step10.jsx` | **P3 — 10-step flow** |
+| `/otr/find` | `FindRegistration.jsx` | **P3 — find reg ID** |
+
+### Contexts & API Clients (P3 added)
+
+| File | Purpose |
+|------|---------|
+| `src/context/CandidateAuthContext.jsx` | Candidate session — `candidate`, `login()`, `logout()`, `refetch()` |
+| `src/api/otr.js` | OTR API calls (sendOtp, verifyOtp, saveStep, uploadPhoto, uploadSignature, submitRegistration, login, logout, findRegistration) |
+| `src/components/LoginModal.jsx` | Candidate login modal (registrationId + password) |
+
+### What Needs to Be Built (Phase 4+)
+
+- `/apply` — job application flow (blocked Q#8)
+- `/fee` — payment gateway (blocked Q#7, Q#2, no contract)
 
 ---
 
@@ -167,7 +191,7 @@ Nagarpalika/
 | Model | File | Key Fields |
 |-------|------|-----------|
 | `Advertisement` | `models/Advertisement.js` | advtNo, postTitle, departmentId, postClass, payScale, vacancies, applicationFee, startDate, endDate, pdfPath, status (draft/published/closed), tenantId, isDeleted |
-| `Candidate` | `models/Candidate.js` | registrationId, aadhaarHash (SHA-256, never returned in API), name, dob, gender, category, address, mobile, email, photoPath, signaturePath, isActive, tenantId |
+| `Candidate` | `models/Candidate.js` | registrationId, aadhaarHash (SHA-256, never returned in API), name, fatherName, dob, gender, category, nationality, religion, maritalStatus, exServiceman, motherTongue, mobile, altMobile, email, permanentAddress{}, currentAddress{}, qualification{}, languages[], phStatus, phType, phPercentage, photoPath, signaturePath, passwordHash, loginAttempts, lockoutUntil, otrStep, registrationCompleted, editWindowExpiresAt, isActive, tenantId |
 | `Application` | `models/Application.js` | applicationRefNo, registrationId, advtNo, submittedAt, status (draft/submitted/fee_pending/fee_paid/shortlisted/rejected), tenantId, isDeleted |
 | `FeePayment` | `models/FeePayment.js` | paymentId, applicationRefNo, amount, gatewayTxnId, mode, status (pending/success/failed/refunded), receiptPath, paidAt, tenantId |
 | `CallLetter` | `models/CallLetter.js` | registrationId, advtNo, rollNumber, examDate, venue, availableFrom, enabled, tenantId |
@@ -181,7 +205,7 @@ Nagarpalika/
 | `EmailSetup/EmailFor/EmailTemplate` | existing | Email notification config |
 | `MasterData` | existing | Gender, category, etc. |
 | `MenuMaster/MenuGroup` | existing | Admin menu management |
-| `Otp` | existing | TTL-indexed OTP (10-min expiry) |
+| `Otp` | existing (updated) | TTL 300s; added `phone` (sparse), `type` enum (email_verify/aadhaar_otp/login_otp) |
 | `Country/State/City` | existing | Location data |
 
 ### API Routes Built (Server)
@@ -196,6 +220,24 @@ Nagarpalika/
 | `/api/v1/notices` | `notice.controller.js` | search (POST), create, getById, publish (PATCH), delete |
 | `/api/v1/help-queries` | `helpQuery.controller.js` | create (public), search (POST, admin), updateStatus (PATCH) |
 | `/api/v1/analytics` | `analytics.controller.js` | getDashboardStats (activeAdvt, totalCandidates, totalApplications, totalFeesCollected) |
+| `/api/v1/otr/aadhaar/send-otp` (POST) | `otr.controller.js` | Rate-limited (3/hr/phone); stores OTP + session.otr; SMS via sms.service |
+| `/api/v1/otr/aadhaar/verify-otp` (POST) | `otr.controller.js` | Verifies OTP; creates partial Candidate; session fixation prevention |
+| `/api/v1/otr/login` (POST) | `otr.controller.js` | bcrypt verify; brute-force lockout (5 attempts → 15 min) |
+| `/api/v1/otr/logout` (POST) | `otr.controller.js` | Session destroy |
+| `/api/v1/otr/find` (POST) | `otr.controller.js` | Hash aadhaar, send regId via SMS if match; same response always (anti-enum) |
+| `/api/v1/otr/me` (GET, auth) | `otr.controller.js` | Returns candidate profile (excludes passwordHash, aadhaarHash) |
+| `/api/v1/otr/step/:step` (PUT, auth) | `otr.controller.js` | Saves steps 2–7 via whitelist; enforces edit window |
+| `/api/v1/otr/upload/photo` (POST, auth) | `otr.controller.js` | Magic-byte MIME, WebP conversion, UUID filename, <2 MB |
+| `/api/v1/otr/upload/signature` (POST, auth) | `otr.controller.js` | Same as photo, <1 MB |
+| `/api/v1/otr/submit` (POST, auth) | `otr.controller.js` | reCAPTCHA verify; bcrypt 12 rounds; sets editWindowExpiresAt; SMS confirmation |
+
+### New Files Added (P3)
+
+| File | Purpose |
+|------|---------|
+| `middlewares/candidateAuth.js` | Protects OTR authenticated routes; attaches `req.candidate` |
+| `services/sms.service.js` | SMS stub (logs in dev); production BSP wiring pending Q#9 |
+| `utils/registrationId.js` | Atomic counter → `RP-{TENANT}-{YEAR}-{7DIGIT}` |
 
 ### Multi-Tenant Status
 
@@ -238,7 +280,7 @@ Nagarpalika/
 |------|--------------|
 | `Web/.env` | `VITE_API_URL`, `VITE_APP_NAME` |
 | `Admin/.env` | `VITE_API_URL`, `VITE_APP_NAME` |
-| `Server/.env` | `DATABASE`, `PORT`, `NODE_ENV`, `SESSION_SECRET`, `ALLOWED_ORIGINS`, `JWT_*`, `WHATSAPP_*`, `SMS_*`, `SMTP_*`, `UIDAI_*`, `PAYMENT_GATEWAY_*` |
+| `Server/.env` | `DATABASE`, `PORT`, `NODE_ENV`, `SESSION_SECRET`, `ALLOWED_ORIGINS`, `JWT_*`, `WHATSAPP_*`, `SMS_*`, `SMTP_*`, `UIDAI_*`, `PAYMENT_GATEWAY_*`, `RECAPTCHA_SECRET_KEY` (P3 — optional, skips verify if absent) |
 
 ---
 

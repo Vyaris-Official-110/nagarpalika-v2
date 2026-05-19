@@ -3,11 +3,11 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 3 of 9 |
-| **Status** | 🔴 Not Started |
+| **Status** | 🟢 Done |
 | **Depends On** | Phase 1 (Candidate model + routes) · Phase 2 (nav restructure) |
 | **Blocks** | Phase 4 (Application requires valid Registration ID) |
 | **PRD Sections** | §5 M2 OTR Registration · §5 M7 Authentication · §9.1 Auth · §9.2 OTP · §9.3 Authorization |
-| **Open Questions** | #1 (edit window duration), #3 (Aadhaar OTP method), #9 (WhatsApp BSP) |
+| **Open Questions** | #9 (WhatsApp BSP — SMS stub active until resolved); swap UIDAI when AUA granted |
 
 ---
 
@@ -15,21 +15,42 @@
 
 | Item | Location |
 |------|----------|
-| OTP model (TTL-indexed, 10-min expire, attempt tracking) | `Server/models/Otp.js` |
-| OTP send + verify + password-reset routes | `Server/routes/v1/otp.routes.js` |
-| Secure file upload (magic byte, UUID rename, Sharp compress) | `Server/middlewares/secureUpload.js` |
-| Session auth pattern (login → HttpOnly cookie → verify-session) | `Server/middlewares/authMiddleware.js` |
-| bcrypt password hashing | Used in `Server/controllers/v1/employee.controller.js` — same pattern for candidates |
-| Input validation framework (express-validator) | `Server/middlewares/inputValidator.js` |
-| WhatsApp send + SMS fallback infrastructure | `Server/services/whatsapp.service.js` |
+| OTP model (TTL 300s, `phone` sparse field, `type` enum) | `Server/models/Otp.js` |
+| Secure file upload (magic byte, UUID rename, WebP compress) | `Server/middlewares/secureUpload.js` |
+| bcrypt password hashing | `Server/controllers/v1/otr.controller.js` (12 rounds) |
+| Input validation framework | `Server/middlewares/inputValidator.js` |
+| WhatsApp infrastructure | `Server/services/whatsapp.service.js` |
+| **Candidate model** (extended) | `Server/models/Candidate.js` — full OTR fields: address sub-schemas, qualification, languages, PH, auth, otrStep, editWindowExpiresAt |
+| **candidateAuth middleware** | `Server/middlewares/candidateAuth.js` |
+| **SMS service stub** | `Server/services/sms.service.js` |
+| **Registration ID generator** | `Server/utils/registrationId.js` — atomic counter `RP-{TENANT}-{YEAR}-{7DIGIT}` |
+| **OTR controller** | `Server/controllers/v1/otr.controller.js` — all 10 endpoints |
+| **OTR routes** | `Server/routes/v1/otr.routes.js` mounted at `/api/v1/` |
+| **CandidateAuthContext** | `Web/src/context/CandidateAuthContext.jsx` |
+| **OTR API client** | `Web/src/api/otr.js` |
+| **Steps 1–10 UI** | `Web/src/pages/Registration/Step1Aadhaar.jsx` through `Step10Preview.jsx` |
+| **RegistrationLayout + stepper** | `Web/src/pages/Registration/RegistrationLayout.jsx` + `.otr-stepper` CSS |
+| **FindRegistration page** | `Web/src/pages/Registration/FindRegistration.jsx` |
+| **LoginModal** | `Web/src/components/LoginModal.jsx` |
+| **App.jsx OTR routes** | `/otr`, `/otr/step/1–10`, `/otr/find` |
+| **Header login button** | `Web/src/components/Header.jsx` — candidate-aware login/logout |
 
----
+## Security Checklist (All Implemented ✅)
 
-## Remaining Work 🔴
+- ✅ Aadhaar SHA-256 only — raw never in DB or logs
+- ✅ OTP: 6-digit, 300s TTL, max 3 attempts, rate-limited 3/hr/phone
+- ✅ Photo/signature: magic-byte check, WebP re-encode, outside webroot, UUID filename
+- ✅ Session fixation: `req.session.regenerate()` on OTP verify + every login
+- ✅ Brute force: 5 failed attempts → 15-min lockout (server-side)
+- ✅ Edit window: `editWindowExpiresAt` enforced server-side in every step + submit
+- ✅ reCAPTCHA: server-side token verify at submit (skips if `RECAPTCHA_SECRET_KEY` absent — dev only)
+- ✅ Enumeration prevention: `findRegistration` always returns same message
 
-### Backend
+## Remaining Work 🔴 (External Dependencies)
 
-#### Candidate Routes (`Server/routes/v1/candidates.routes.js`)
+### Pending External Wiring
+
+#### Candidate Routes (`Server/routes/v1/otr.routes.js` — built)
 
 | Endpoint | Method | Auth | Purpose |
 |----------|--------|------|---------|

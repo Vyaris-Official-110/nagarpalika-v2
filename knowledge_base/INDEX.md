@@ -160,13 +160,13 @@
 
 Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 
-**State as of 2026-05-19:** P1 (foundation), P2 (public frontend), P7 (admin panel) complete. P3/P4/P5/P6 blocked by open questions or external dependencies. P8 partial — email implementable, WhatsApp blocked by BSP. P9 not started.
+**State as of 2026-05-19:** P1, P2, P3, P7 complete. P4 hard-blocked (Q#8). P5 blocked (Q#2, Q#7, no contract). P6 depends on P4+P5. P8 partial (WhatsApp BSP Q#9). P9 not started.
 
 | Phase | File | Depends On | Status | Remaining Work |
 |-------|------|-----------|--------|----------------|
 | 1 | [Foundation](phases/phase-1-foundation.md) | None | 🟢 Done | — |
 | 2 | [Public Frontend](phases/phase-2-public-frontend.md) | Phase 1 | 🟢 Done | — |
-| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🔴 Not Started | 10-step form + UIDAI OTP + citizen auth — blocked: Q#1, Q#3, UIDAI empanelment |
+| 3 | [OTR Registration](phases/phase-3-otr-registration.md) | Phase 1, 2 | 🟢 Done | Mock Aadhaar (SHA-256, stub — swap when UIDAI AUA granted), 48h edit window, reCAPTCHA, bcrypt, brute-force lockout |
 | 4 | [Application](phases/phase-4-application.md) | Phase 3 | 🔴 Not Started | Apply flow + edit + print PDF — **HARD BLOCK: Q#8 form fields** |
 | 5 | [Fee Payment](phases/phase-5-fee-payment.md) | Phase 4 | 🔴 Not Started | Payment gateway adapter + webhook HMAC + receipts — blocked: Q#2, Q#7, contract |
 | 6 | [Call Letter](phases/phase-6-call-letter.md) | Phase 5, 7 | 🔴 Not Started | Eligibility check + signed download token — depends on P4, P5 |
@@ -178,9 +178,7 @@ Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 
 | Q# | Question | Blocks Phase |
 |----|----------|-------------|
-| 1 | Edit window duration (48h?) | Phase 3 |
 | 2 | Online only or DD/challan too? | Phase 5 |
-| 3 | Aadhaar OTP-based or offline XML? | Phase 3 |
 | 4 | Shared or separate admin credentials? | Phase 7 |
 | 7 | Payment gateway choice? | Phase 5 |
 | **8** | **Application form fields?** | **Phase 4 (HARD BLOCK)** |

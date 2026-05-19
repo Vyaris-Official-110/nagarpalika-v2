@@ -196,6 +196,7 @@ import candidatesRoutes from "./routes/v1/candidates.routes.js";
 import applicationsRoutes from "./routes/v1/applications.routes.js";
 import feePaymentsRoutes from "./routes/v1/feePayments.routes.js";
 import callLettersRoutes from "./routes/v1/callLetters.routes.js";
+import otrRoutes from "./routes/v1/otr.routes.js";
 
 app.use("/api/v1", companiesRoutes);
 app.use("/api/v1", departmentsRoutes);
@@ -216,6 +217,7 @@ app.use("/api/v1", candidatesRoutes);
 app.use("/api/v1", applicationsRoutes);
 app.use("/api/v1", feePaymentsRoutes);
 app.use("/api/v1", callLettersRoutes);
+app.use("/api/v1", otrRoutes);
 
 console.log("✅ V1 API routes loaded");
 

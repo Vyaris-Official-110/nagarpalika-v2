@@ -4,9 +4,20 @@ const OtpSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: true,
       trim: true,
       index: true,
+      sparse: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+      index: true,
+      sparse: true,
+    },
+    type: {
+      type: String,
+      enum: ["email_verify", "aadhaar_otp", "login_otp"],
+      default: "email_verify",
     },
     otp: {
       type: String,
@@ -19,7 +30,7 @@ const OtpSchema = new mongoose.Schema(
     createdAt: {
       type: Date,
       default: Date.now,
-      expires: 600, // OTP expires after 10 minutes (600 seconds)
+      expires: 300, // 5 minutes
     },
   },
   {

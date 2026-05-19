@@ -56,7 +56,7 @@ nagarpalika-v2/
 |-------|--------|-------------|----------|
 | P1 · Foundation | 🟢 Done | Models + middleware shipped. Next: add candidate/application/fee/callLetter controllers+routes in their respective phases | — |
 | P2 · Public Frontend | 🟢 Done | Notice + HelpQuery models/controllers/routes; Careers + Notices pages fetch from API; dropdown nav with Registration + Online Application groups; Help page with FAQ + contact form | — |
-| P3 · OTR Registration | 🔴 Not started | 10-step Aadhaar OTP registration flow (Server routes + Web UI) | Q#1 (edit window), Q#3 (Aadhaar method), UIDAI AUA empanelment |
+| P3 · OTR Registration | 🟢 Done | Full 10-step flow shipped: Server (Candidate model, OTP model, candidateAuth middleware, otr.controller, otr.routes, sms.service, registrationId util) + Web (CandidateAuthContext, api/otr.js, Steps 1–10, FindRegistration, LoginModal, App.jsx routes, Header login button, stepper CSS). Mock Aadhaar (SHA-256 hash, no UIDAI call), 48h edit window, reCAPTCHA hook, bcrypt passwords, brute-force lockout. | Swap UIDAI stub when AUA empanelment done (Q#3); wire WhatsApp BSP when registered (Q#9) |
 | P4 · Application | 🔴 Not started | Apply flow + edit window + print PDF | **Q#8: form fields unresolved (HARD BLOCK)** |
 | P5 · Fee Payment | 🔴 Not started | Payment gateway adapter + webhook HMAC + PDF receipt | Q#2 (online-only?), Q#7 (gateway choice), contract not signed |
 | P6 · Call Letter | 🔴 Not started | Eligibility check + signed download token + admit card PDF | Depends on P4, P5 |
@@ -70,9 +70,7 @@ nagarpalika-v2/
 |----|----------|--------|
 | **Q#8** | Application form fields beyond OTR not confirmed by stakeholders | **P4 (HARD BLOCK)** |
 | **Q#9** | WhatsApp BSP provider not registered by municipality | **P8 (HARD BLOCK)** |
-| Q#1 | Edit window duration (48h or longer?) | P3 |
 | Q#2 | Online fee only, or offline DD/challan too? | P5 |
-| Q#3 | Aadhaar OTP-based or offline XML? | P3 |
 | Q#4 | Shared or separate admin credentials per subdomain? | P7 |
 | Q#7 | Payment gateway — Razorpay / PayGov / Paytm / state portal? | P5 |
 

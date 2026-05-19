@@ -857,3 +857,58 @@ table.ojas { min-width: 540px; }
   .nav-row { padding: 6px 8px; gap: 6px 12px; font-size: 10.5px; letter-spacing: .02em; }
   .nav-row a { padding: 3px 0; }
 }
+
+/* ===== OTR REGISTRATION STEPPER ===== */
+.otr-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 8px;
+  background: var(--ojas-cream);
+  border-bottom: 1px solid var(--ojas-line);
+  flex-wrap: wrap;
+  gap: 0;
+}
+.otr-step {
+  display: flex;
+  align-items: center;
+  font: 700 11px/1 var(--font-sans);
+  color: var(--ojas-ink-3);
+  white-space: nowrap;
+}
+.otr-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--ojas-line);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 11px/1 var(--font-sans);
+  color: var(--ojas-ink-3);
+  flex: 0 0 auto;
+}
+.otr-step-line {
+  width: 18px;
+  height: 2px;
+  background: var(--ojas-line);
+  flex: 0 0 auto;
+}
+.otr-step.done .otr-step-num {
+  background: var(--ojas-green);
+  border-color: var(--ojas-green-deep);
+  color: #fff;
+}
+.otr-step.done .otr-step-line { background: var(--ojas-green); }
+.otr-step.active .otr-step-num {
+  background: var(--ojas-navy);
+  border-color: var(--ojas-navy-deep);
+  color: #fff;
+}
+.otr-step.active { color: var(--ojas-navy); }
+
+@media (max-width: 600px) {
+  .otr-step-line { width: 8px; }
+  .otr-step-num { width: 20px; height: 20px; font-size: 10px; }
+}

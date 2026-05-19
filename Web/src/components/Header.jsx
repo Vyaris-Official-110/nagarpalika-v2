@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../context/LangContext'
+import { useCandidateAuth } from '../context/CandidateAuthContext'
+import LoginModal from './LoginModal'
 import SiteMarquee from './SiteMarquee'
 
 const NAV = [
@@ -74,6 +76,14 @@ function Dropdown({ item, pathname, t }) {
 export default function Header() {
   const { lang, setLang, t } = useLang()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { candidate, logout } = useCandidateAuth()
+  const [showLogin, setShowLogin] = useState(false)
+
+  async function handleLogout() {
+    await logout()
+    navigate('/')
+  }
 
   return (
     <>
@@ -112,7 +122,37 @@ export default function Header() {
               </button>
             ))}
           </div>
+          <span className="sep">|</span>
+          {candidate ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ color: 'var(--ojas-saffron-soft)', fontSize: 12, fontWeight: 700 }}>
+                {candidate.registrationId || candidate.name || 'Candidate'}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  background: 'var(--ojas-red)', border: 'none', color: '#fff',
+                  padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowLogin(true)}
+              style={{
+                background: 'var(--ojas-saffron)', border: 'none', color: '#fff',
+                padding: '3px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              Login / Register
+            </button>
+          )}
         </div>
+        {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
       </div>
 
       <nav className="nav-row" aria-label="Main navigation">
