@@ -1,5 +1,7 @@
 import Candidate from "../models/Candidate.js";
 
+const INACTIVITY_MS = 30 * 60 * 1000; // PRD §M7: 30-min inactivity timeout
+
 export const candidateAuth = async (req, res, next) => {
   if (!req.session?.candidate?.candidateId) {
     return res
@@ -7,7 +9,14 @@ export const candidateAuth = async (req, res, next) => {
       .json({ isOk: false, status: 401, message: "Not logged in" });
   }
 
-  const { candidateId, tenantId, sessionToken } = req.session.candidate;
+  const { candidateId, tenantId, sessionToken, lastActivity } = req.session.candidate;
+
+  if (lastActivity && Date.now() - lastActivity > INACTIVITY_MS) {
+    req.session.candidate = null;
+    return res
+      .status(401)
+      .json({ isOk: false, status: 401, message: "Session expired due to inactivity. Please log in again." });
+  }
 
   if (tenantId !== req.tenantId) {
     return res
@@ -42,6 +51,9 @@ export const candidateAuth = async (req, res, next) => {
         message: "Session invalidated by new login",
       });
   }
+
+  // Refresh lastActivity on every valid request
+  req.session.candidate.lastActivity = Date.now();
 
   req.candidate = candidate;
   next();

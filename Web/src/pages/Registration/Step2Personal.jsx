@@ -18,9 +18,6 @@ export default function Step2Personal() {
     category: candidate?.category || 'GEN',
     nationality: candidate?.nationality || 'Indian',
     religion: candidate?.religion || '',
-    maritalStatus: candidate?.maritalStatus || 'S',
-    exServiceman: candidate?.exServiceman || false,
-    motherTongue: candidate?.motherTongue || '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -88,25 +85,6 @@ export default function Step2Personal() {
                 {RELIGIONS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
-            <div className="form-field">
-              <label>Marital Status</label>
-              <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange}>
-                <option value="S">Single</option>
-                <option value="M">Married</option>
-                <option value="W">Widow/er</option>
-                <option value="D">Divorced</option>
-              </select>
-            </div>
-            <div className="form-field">
-              <label>Mother Tongue</label>
-              <input type="text" name="motherTongue" value={form.motherTongue} onChange={handleChange} />
-            </div>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-              <input type="checkbox" name="exServiceman" checked={form.exServiceman} onChange={handleChange} />
-              Ex-Serviceman
-            </label>
           </div>
           <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
             <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/1')}>Back</button>

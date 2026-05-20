@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import RegistrationLayout from './RegistrationLayout'
 import { submitRegistration } from '../../api/otr'
@@ -18,24 +18,52 @@ export default function Step10Preview() {
   const { candidate, refetch } = useCandidateAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [agreed, setAgreed] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(null)
   const [loading, setLoading] = useState(false)
+  const captchaRef = useRef(null)
+  const captchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY
+
+  useEffect(() => {
+    if (!captchaSiteKey) return
+    const scriptId = 'recaptcha-script'
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://www.google.com/recaptcha/api.js'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
+
+    window.__onCaptchaVerify = (token) => setCaptchaToken(token)
+    window.__onCaptchaExpire = () => setCaptchaToken('')
+
+    return () => {
+      delete window.__onCaptchaVerify
+      delete window.__onCaptchaExpire
+    }
+  }, [captchaSiteKey])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    if (!agreed) { setError('You must accept the declaration'); return }
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return }
-    if (password !== confirmPassword) { setError('Passwords do not match'); return }
+    if (captchaSiteKey && !captchaToken) {
+      setError('Please complete the CAPTCHA')
+      return
+    }
     setLoading(true)
     try {
-      const res = await submitRegistration({ password, confirmPassword })
+      const res = await submitRegistration({ password, confirmPassword, captchaToken })
       setSuccess(res.data)
       await refetch()
     } catch (err) {
       setError(err.response?.data?.message || 'Submission failed')
+      if (window.grecaptcha && captchaSiteKey) {
+        window.grecaptcha.reset()
+        setCaptchaToken('')
+      }
     } finally {
       setLoading(false)
     }
@@ -55,7 +83,7 @@ export default function Step10Preview() {
           }}>
             {success.registrationId}
           </p>
-          <p style={{ marginBottom: 8 }}>Your Registration ID has been sent to your registered mobile number.</p>
+          <p style={{ marginBottom: 8 }}>Your Registration ID has been sent to your registered mobile number and email.</p>
           <p style={{ color: '#666', fontSize: 13 }}>
             Edit window closes: <strong>{success.editWindowExpiresAt ? new Date(success.editWindowExpiresAt).toLocaleString() : '48 hours'}</strong>
           </p>
@@ -99,6 +127,7 @@ export default function Step10Preview() {
             <Row label="Mobile" value={candidate.mobile} />
             <Row label="Email" value={candidate.email} />
             <Row label="Permanent Address" value={addrStr} />
+            <Row label="Marital Status" value={{ S: 'Single', M: 'Married', W: 'Widow/er', D: 'Divorced' }[candidate.maritalStatus]} />
             <Row label="Qualification" value={q ? `${q.degree || ''} — ${q.university || ''} (${q.passYear || ''})` : ''} />
             <Row label="PH Status" value={candidate.phStatus ? `Yes — ${candidate.phType} (${candidate.phPercentage}%)` : 'No'} />
             <Row label="Photo" value={candidate.photoPath ? 'Uploaded ✓' : 'Not uploaded'} />
@@ -109,6 +138,9 @@ export default function Step10Preview() {
         <form onSubmit={handleSubmit}>
           <div style={{ padding: 16, border: '1px solid var(--ojas-line)', marginBottom: 16 }}>
             <p style={{ fontWeight: 700, marginBottom: 10 }}>Set Login Password</p>
+            <div className="notice info" style={{ marginBottom: 12, fontSize: 13 }}>
+              Min 8 characters · Uppercase · Digit · Special character
+            </div>
             <div className="form-row">
               <div className="form-field">
                 <label>Password <span style={{ color: 'var(--ojas-red)' }}>*</span></label>
@@ -118,7 +150,6 @@ export default function Step10Preview() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Min 8 characters"
                   required
-                  minLength={8}
                 />
               </div>
               <div className="form-field">
@@ -133,19 +164,24 @@ export default function Step10Preview() {
             </div>
           </div>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
-              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} style={{ marginTop: 2 }} />
-              <span>
-                I hereby declare that all information provided is true and correct to the best of my knowledge.
-                I understand that providing false information is a disqualification offense.
-              </span>
-            </label>
-          </div>
+          {captchaSiteKey && (
+            <div style={{ marginBottom: 16 }} ref={captchaRef}>
+              <div
+                className="g-recaptcha"
+                data-sitekey={captchaSiteKey}
+                data-callback="__onCaptchaVerify"
+                data-expired-callback="__onCaptchaExpire"
+              />
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/9')}>Back</button>
-            <button type="submit" className="btn-primary" disabled={loading || !agreed}>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || (captchaSiteKey ? !captchaToken : false)}
+            >
               {loading ? 'Submitting…' : 'Submit Registration'}
             </button>
           </div>

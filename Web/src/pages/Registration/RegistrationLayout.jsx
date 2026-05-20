@@ -3,11 +3,11 @@ const STEPS = [
   'Personal',
   'Contact',
   'Address',
-  'Education',
+  'Other Details',
   'Languages',
-  'PH Status',
   'Photo',
   'Signature',
+  'Declaration',
   'Submit',
 ]
 

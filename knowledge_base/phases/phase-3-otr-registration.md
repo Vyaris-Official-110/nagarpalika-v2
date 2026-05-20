@@ -32,9 +32,26 @@
 | **RegistrationLayout + stepper** | `Web/src/pages/Registration/RegistrationLayout.jsx` + `.otr-stepper` CSS |
 | **FindRegistration page** | `Web/src/pages/Registration/FindRegistration.jsx` |
 | **LoginModal** | `Web/src/components/LoginModal.jsx` |
-| **App.jsx OTR routes** | `/otr`, `/otr/step/1–10`, `/otr/find`, `/registration/edit` |
-| **EditRegistration page** | `Web/src/pages/Registration/EditRegistration.jsx` — step 1 always "View ▶" (Aadhaar immutable); step 2 notes name/DOB locked; 48h window enforced |
+| **App.jsx OTR routes** | `/otr`, `/otr/step/1–10`, `/otr/find`, `/registration/edit`, `/otr/instructions`, `/registration/edit/verify`, `/otr/password/reset` |
+| **EditRegistration page** | `Web/src/pages/Registration/EditRegistration.jsx` — step 1 always "View ▶"; step 2 locked-field note; 48h window; edit confirm OTP (gap 10) |
 | **Header login button** | `Web/src/components/Header.jsx` — candidate-aware login/logout |
+| **InstructionsStep (gap 1)** | `Web/src/pages/Registration/InstructionsStep.jsx` — scroll-to-bottom gate, "I Agree" → `/otr` |
+| **Step5OtherDetails (gap 13)** | `Web/src/pages/Registration/Step5OtherDetails.jsx` — marital, PH, ex-serviceman, qualification, mother tongue |
+| **StepDeclaration (gap 13)** | `Web/src/pages/Registration/StepDeclaration.jsx` — bilingual declaration, checkbox gate, step 9 |
+| **ForgotPassword (gap 8)** | `Web/src/pages/Registration/ForgotPassword.jsx` — regid+DOB → OTP → new password |
+| **EditVerify (gap 11)** | `Web/src/pages/Registration/EditVerify.jsx` — regid+DOB or aadhaar+OTP gate before EditRegistration |
+| **LoginModal — Aadhaar tab (gap 7)** | `Web/src/components/LoginModal.jsx` — tab toggle regid/aadhaar; Forgot Password button |
+| **FindRegistration — two-step (gap 3)** | `Web/src/pages/Registration/FindRegistration.jsx` — mobile+DOB or aadhaar+DOB → OTP → same response (enumeration safe) |
+| **Candidate.emailVerified field** | `Server/models/Candidate.js` — Boolean, default false; set true on email OTP verify |
+| **Email service (gap 12)** | `Server/services/email.service.js` — nodemailer, dev logs only, prod SMTP_* env vars |
+| **Verhoeff Aadhaar check (gap 6)** | `Server/controllers/v1/otr.controller.js` — `verhoeffCheck()` on all Aadhaar inputs |
+| **Password policy (gap 4)** | `Server/controllers/v1/otr.controller.js` — `validatePassword()` min 8 + upper + digit + special |
+| **30-min inactivity (gap 9)** | `Server/middlewares/candidateAuth.js` — INACTIVITY_MS check + lastActivity refresh |
+| **Step 3 Email OTP (gap 2)** | `Web/src/pages/Registration/Step3Contact.jsx` — sendEmailOtp + verifyEmailOtp gate |
+| **reCAPTCHA on submit (gap 5)** | `Web/src/pages/Registration/Step10Preview.jsx` — VITE_RECAPTCHA_SITE_KEY dynamic load |
+| **Edit confirm OTP (gap 10)** | `Server/controllers/v1/otr.controller.js` — `editConfirmSendOtp`, `editConfirmVerifyOtp` |
+| **Edit verify access (gap 11)** | `Server/controllers/v1/otr.controller.js` — `editVerifyAccessSend`, `editVerifyAccessOtp` |
+| **OTR step order per PRD (gap 13)** | Steps 7=Photo, 8=Signature, 9=Declaration, 5=OtherDetails; old Step7Physical removed |
 
 ## Security Checklist (All Implemented ✅)
 
@@ -47,72 +64,16 @@
 - ✅ reCAPTCHA: server-side token verify at submit (skips if `RECAPTCHA_SECRET_KEY` absent — dev only)
 - ✅ Enumeration prevention: `findRegistration` always returns same message
 
-## Remaining Work 🔴 (External Dependencies)
+## Remaining Work 🔴 (External Dependencies Only)
 
-### Pending External Wiring
+All code is complete. Only external wiring remains:
 
-#### Candidate Routes (`Server/routes/v1/otr.routes.js` — built)
-
-| Endpoint                          | Method | Auth              | Purpose                                    |
-| --------------------------------- | ------ | ----------------- | ------------------------------------------ |
-| `/candidates/otp/aadhaar`         | POST   | None              | Request Aadhaar OTP via UIDAI              |
-| `/candidates/otp/aadhaar/verify`  | POST   | None              | Verify Aadhaar OTP                         |
-| `/candidates/otp/phone`           | POST   | None              | Send phone OTP (WhatsApp → SMS)            |
-| `/candidates/otp/phone/verify`    | POST   | None              | Verify phone OTP                           |
-| `/candidates/otp/email`           | POST   | None              | Send email OTP                             |
-| `/candidates/otp/email/verify`    | POST   | None              | Verify email OTP                           |
-| `/candidates/apply`               | POST   | Session (step 2+) | Submit each step's data                    |
-| `/candidates/apply/photo`         | POST   | Session           | Upload photo (multipart, secureUpload)     |
-| `/candidates/apply/signature`     | POST   | Session           | Upload signature (multipart, secureUpload) |
-| `/candidates/apply/submit`        | POST   | Session           | Final submit + CAPTCHA verify              |
-| `/candidates/edit`                | PATCH  | Session / OTP     | Edit allowed fields only                   |
-| `/candidates/find`                | POST   | None              | Find Reg ID by mobile+DOB or Aadhaar+DOB   |
-| `/candidates/auth/login`          | POST   | None              | Login (Reg ID/Aadhaar + password)          |
-| `/candidates/auth/logout`         | POST   | Session           | Invalidate session                         |
-| `/candidates/auth/password/reset` | POST   | OTP               | Reset password                             |
-
-#### Business Logic
-- `aadhaar_hash + tenant_id` unique constraint enforces 1 Aadhaar = 1 Reg ID per tenant
-- Multi-step state persisted server-side per session — user can resume after Aadhaar verification
-- Edit window: `created_at + edit_window_hours < now()` — reject if expired
-- Locked fields: Aadhaar hash, DOB, name — rejected at controller level even if client sends them
-
-### Frontend — 10-Step OTR Flow (`Web/src/pages/Registration/`)
-
-| Step | Route | Key Implementation |
-|------|-------|--------------------|
-| 1 | `/registration/apply/instructions` | Bilingual text. "I Agree" disabled until scroll-to-bottom. Server validates I-Agree session flag. |
-| 2 | `/registration/apply/aadhaar` | Aadhaar input → UIDAI OTP → verify. Phone OTP (WhatsApp primary, SMS fallback). Password creation with policy validation. |
-| 3 | `/registration/apply/personal` | Name, Father/Husband, DOB, gender, category (General/OBC/SC/ST/EWS), nationality, religion |
-| 4 | `/registration/apply/communication` | Permanent + current address (same-as checkbox), OTP-verified mobile, optional alt mobile, OTP-verified email |
-| 5 | `/registration/apply/other` | Marital status, PH status (type + % if yes), ex-serviceman, highest qualification |
-| 6 | `/registration/apply/language` | Languages: Read/Write/Speak checkboxes per language, mother tongue |
-| 7 | `/registration/apply/photo` | JPG/JPEG, max 50 KB, 3.5×4.5 cm. Preview + re-upload. |
-| 8 | `/registration/apply/signature` | JPG/JPEG, max 20 KB, 3.5×1.5 cm. Preview + re-upload. |
-| 9 | `/registration/apply/declaration` | Bilingual declaration text. Checkbox required. |
-| 10 | `/registration/apply/submit` | Image CAPTCHA (server-side verified) → Registration ID displayed + sent via SMS + email |
-
-**Multi-step state:** Store step data in React state + server session. On browser close/refresh, resume from last completed step if Aadhaar was verified.
-
-### Edit Registration (`/registration/edit`)
-- Access: Reg ID + DOB **or** Aadhaar + OTP
-- Server checks: `edit_window_expires_at > now()` — reject if expired (server-side, not UI-gated)
-- Editable: communication details, photo, signature, language details
-- Locked UI: Aadhaar, DOB, name shown read-only
-- Save requires OTP confirmation to registered mobile
-
-### Find Registration ID (`/registration/find`)
-- Input: Mobile + DOB **or** Aadhaar + DOB
-- OTP verification → Reg ID sent to registered mobile + email (NOT displayed on screen)
-
-### Login Modal (M7)
-- Trigger: "Login / Register" nav button
-- Fields: Registration ID **or** Aadhaar + Password
-- On success: session cookie set (HttpOnly, Secure, SameSite=Strict)
-- New session ID on login (session fixation prevention)
-- Max 1 active session per candidate
-- "Forgot Password": OTP → reset form
-- Timeout: 30-min inactivity
+| Item | Blocks | Owner |
+|------|--------|-------|
+| Swap UIDAI stub with real AUA credentials (Step 1 Aadhaar OTP) | Live Aadhaar verify | Municipality (Q#3) |
+| Register WhatsApp BSP, wire `whatsapp.service.js` | SMS notifications | Municipality (Q#9) |
+| Set `SMTP_*` env vars for production email delivery | Email OTP, Reg ID email | DevOps |
+| Set `RECAPTCHA_SECRET_KEY` + `VITE_RECAPTCHA_SITE_KEY` in prod | Step 10 CAPTCHA | DevOps |
 
 ---
 
@@ -130,12 +91,16 @@
 
 ## Security Checklist
 
-- [ ] Aadhaar: SHA-256 hash only stored; raw number never in DB or logs
-- [ ] OTP: 6 digits, 5-min expiry, max 3 attempts, rate-limited 3/hour/phone, never in logs
-- [ ] Photo/signature: magic-byte MIME check; re-encoded; stored outside webroot; UUID filename
-- [ ] Session fixation: new session ID on every login
-- [ ] Brute force: 5 failed attempts → 15-min lockout (server-side, not cookie-based)
-- [ ] Edit window: enforced server-side via `edit_window_expires_at` timestamp
-- [ ] CSRF tokens on all registration form submissions
-- [ ] CAPTCHA: server-side token verified with provider API before step 10 processing
-- [ ] Enumeration prevention: same response time + message for valid and invalid Aadhaar on OTP request
+- ✅ Aadhaar: SHA-256 hash only stored; raw number never in DB or logs
+- ✅ Aadhaar: Verhoeff checksum validated on all inputs (gap 6)
+- ✅ OTP: 6 digits, 5-min expiry, max 3 attempts, rate-limited 3/hour/phone, never in logs
+- ✅ Photo/signature: magic-byte MIME check; re-encoded; stored outside webroot; UUID filename
+- ✅ Session fixation: new session ID on every login
+- ✅ Brute force: 5 failed attempts → 15-min lockout (server-side, not cookie-based)
+- ✅ 30-min inactivity timeout enforced server-side (gap 9)
+- ✅ Edit window: enforced server-side via `editWindowExpiresAt` timestamp
+- ✅ CSRF tokens on all registration form submissions
+- ✅ CAPTCHA: reCAPTCHA v2 server-side token verified before step 10 submit (gap 5)
+- ✅ Enumeration prevention: same response for valid/invalid on find, reset, editVerify flows
+- ✅ Password policy: min 8 + uppercase + digit + special character (gap 4)
+- ✅ Single-session enforcement: activeSessionId per candidate

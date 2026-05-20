@@ -26,13 +26,13 @@ export default function Step8Photo() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!file && !candidate?.photoPath) { setError('Please upload a photo'); return }
-    if (!file) { navigate('/otr/step/9'); return }
+    if (!file) { navigate('/otr/step/8'); return }
     setError('')
     setLoading(true)
     try {
       await uploadPhoto(file)
       await refetch()
-      navigate('/otr/step/9')
+      navigate('/otr/step/8')
     } catch (err) {
       setError(err.response?.data?.message || 'Upload failed')
     } finally {
@@ -41,9 +41,9 @@ export default function Step8Photo() {
   }
 
   return (
-    <RegistrationLayout currentStep={8}>
+    <RegistrationLayout currentStep={7}>
       <div className="box-title">
-        <span>Step 8 — Photo Upload</span>
+        <span>Step 7 — Photo Upload</span>
         <span className="guj">ફોટો અપલોડ</span>
       </div>
       <div className="box-body">
@@ -87,7 +87,7 @@ export default function Step8Photo() {
             </div>
           </div>
           <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
-            <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/7')}>Back</button>
+            <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/6')}>Back</button>
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Uploading…' : 'Save & Continue'}
             </button>

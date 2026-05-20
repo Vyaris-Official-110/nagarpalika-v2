@@ -59,6 +59,7 @@ const candidateSchema = new mongoose.Schema(
     mobile: { type: String, required: true, trim: true },
     altMobile: { type: String, trim: true, default: "" },
     email: { type: String, trim: true, default: "" },
+    emailVerified: { type: Boolean, default: false },
 
     // Address
     permanentAddress: { type: addressSchema, default: () => ({}) },

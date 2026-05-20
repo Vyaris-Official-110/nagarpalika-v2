@@ -26,13 +26,13 @@ export default function Step9Signature() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (!file && !candidate?.signaturePath) { setError('Please upload your signature'); return }
-    if (!file) { navigate('/otr/step/10'); return }
+    if (!file) { navigate('/otr/step/9'); return }
     setError('')
     setLoading(true)
     try {
       await uploadSignature(file)
       await refetch()
-      navigate('/otr/step/10')
+      navigate('/otr/step/9')
     } catch (err) {
       setError(err.response?.data?.message || 'Upload failed')
     } finally {
@@ -41,9 +41,9 @@ export default function Step9Signature() {
   }
 
   return (
-    <RegistrationLayout currentStep={9}>
+    <RegistrationLayout currentStep={8}>
       <div className="box-title">
-        <span>Step 9 — Signature Upload</span>
+        <span>Step 8 — Signature Upload</span>
         <span className="guj">સહી અપલોડ</span>
       </div>
       <div className="box-body">
@@ -85,7 +85,7 @@ export default function Step9Signature() {
             </div>
           )}
           <div style={{ marginTop: 20, display: 'flex', gap: 10 }}>
-            <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/8')}>Back</button>
+            <button type="button" className="btn secondary" onClick={() => navigate('/otr/step/7')}>Back</button>
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Uploading…' : 'Save & Continue'}
             </button>
