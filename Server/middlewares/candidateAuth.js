@@ -9,13 +9,18 @@ export const candidateAuth = async (req, res, next) => {
       .json({ isOk: false, status: 401, message: "Not logged in" });
   }
 
-  const { candidateId, tenantId, sessionToken, lastActivity } = req.session.candidate;
+  const { candidateId, tenantId, sessionToken, lastActivity } =
+    req.session.candidate;
 
   if (lastActivity && Date.now() - lastActivity > INACTIVITY_MS) {
     req.session.candidate = null;
     return res
       .status(401)
-      .json({ isOk: false, status: 401, message: "Session expired due to inactivity. Please log in again." });
+      .json({
+        isOk: false,
+        status: 401,
+        message: "Session expired due to inactivity. Please log in again.",
+      });
   }
 
   if (tenantId !== req.tenantId) {
@@ -43,13 +48,11 @@ export const candidateAuth = async (req, res, next) => {
     candidate.activeSessionId !== sessionToken
   ) {
     req.session.candidate = null;
-    return res
-      .status(401)
-      .json({
-        isOk: false,
-        status: 401,
-        message: "Session invalidated by new login",
-      });
+    return res.status(401).json({
+      isOk: false,
+      status: 401,
+      message: "Session invalidated by new login",
+    });
   }
 
   // Refresh lastActivity on every valid request

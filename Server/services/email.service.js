@@ -24,7 +24,9 @@ export async function sendEmail({ to, subject, text, html }) {
     return;
   }
   await transporter.sendMail({
-    from: process.env.SMTP_FROM || "NagarPalika Portal <noreply@nagarpalika.gov.in>",
+    from:
+      process.env.SMTP_FROM ||
+      "NagarPalika Portal <noreply@nagarpalika.gov.in>",
     to,
     subject,
     text,

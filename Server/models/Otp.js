@@ -16,7 +16,15 @@ const OtpSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["email_verify", "aadhaar_otp", "login_otp", "email_otp", "find_otp", "reset_otp", "edit_access_otp"],
+      enum: [
+        "email_verify",
+        "aadhaar_otp",
+        "login_otp",
+        "email_otp",
+        "find_otp",
+        "reset_otp",
+        "edit_access_otp",
+      ],
       default: "email_verify",
     },
     otp: {

@@ -68,7 +68,12 @@ router.post("/otr/email/verify-otp", candidateAuth, verifyEmailOtp);
 
 // Authenticated — File Uploads
 router.post("/otr/upload/photo", candidateAuth, photoUpload, uploadPhoto);
-router.post("/otr/upload/signature", candidateAuth, signatureUpload, uploadSignature);
+router.post(
+  "/otr/upload/signature",
+  candidateAuth,
+  signatureUpload,
+  uploadSignature,
+);
 
 // Authenticated — Submit + Edit Confirm OTP (gap 10)
 router.post("/otr/submit", candidateAuth, submitRegistration);

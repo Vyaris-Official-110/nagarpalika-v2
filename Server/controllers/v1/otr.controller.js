@@ -381,7 +381,15 @@ export const getMyProfile = async (req, res) => {
 
 // gap 13: fields regrouped to match PRD step layout
 const STEP_FIELDS = {
-  2: ["name", "fatherName", "dob", "gender", "category", "nationality", "religion"],
+  2: [
+    "name",
+    "fatherName",
+    "dob",
+    "gender",
+    "category",
+    "nationality",
+    "religion",
+  ],
   3: ["email", "altMobile"],
   4: ["permanentAddress", "currentAddress", "currentSameAsPermanent"],
   5: [
@@ -560,9 +568,7 @@ export const submitRegistration = async (req, res) => {
           .json({ isOk: false, message: "CAPTCHA verification failed" });
       }
     } else if (captchaSecret && !captchaToken) {
-      return res
-        .status(400)
-        .json({ isOk: false, message: "CAPTCHA required" });
+      return res.status(400).json({ isOk: false, message: "CAPTCHA required" });
     }
 
     // gap 4: full password policy
@@ -688,7 +694,10 @@ export const candidateLogin = async (req, res) => {
       });
     }
 
-    const passwordMatch = await bcrypt.compare(password, candidate.passwordHash);
+    const passwordMatch = await bcrypt.compare(
+      password,
+      candidate.passwordHash,
+    );
 
     if (!passwordMatch) {
       candidate.loginAttempts = (candidate.loginAttempts || 0) + 1;
@@ -788,7 +797,11 @@ export const findSendOtp = async (req, res) => {
       if (candidate && !dobMatches(candidate.dob, dob)) candidate = null;
       targetMobile = mobile.trim();
     } else if (mode === "aadhaar") {
-      if (!aadhaar || !/^\d{12}$/.test(aadhaar.trim()) || !verhoeffCheck(aadhaar.trim())) {
+      if (
+        !aadhaar ||
+        !/^\d{12}$/.test(aadhaar.trim()) ||
+        !verhoeffCheck(aadhaar.trim())
+      ) {
         return res
           .status(400)
           .json({ isOk: false, message: "Invalid Aadhaar number" });
@@ -804,7 +817,10 @@ export const findSendOtp = async (req, res) => {
     } else {
       return res
         .status(400)
-        .json({ isOk: false, message: "Invalid mode. Use 'mobile' or 'aadhaar'" });
+        .json({
+          isOk: false,
+          message: "Invalid mode. Use 'mobile' or 'aadhaar'",
+        });
     }
 
     // Send OTP if candidate found; same response regardless (enumeration prevention)
@@ -829,7 +845,8 @@ export const findSendOtp = async (req, res) => {
 
     return res.status(200).json({
       isOk: true,
-      message: "If details match, OTP has been sent to the registered mobile number",
+      message:
+        "If details match, OTP has been sent to the registered mobile number",
     });
   } catch (err) {
     console.error("findSendOtp error:", err);
@@ -1040,7 +1057,8 @@ export const passwordResetVerify = async (req, res) => {
 
     return res.status(200).json({
       isOk: true,
-      message: "Password reset successful. Please log in with your new password.",
+      message:
+        "Password reset successful. Please log in with your new password.",
     });
   } catch (err) {
     console.error("passwordResetVerify error:", err);
@@ -1069,7 +1087,10 @@ export const editConfirmSendOtp = async (req, res) => {
       });
       await sendSmsOtp(candidate.mobile, otp);
 
-      const response = { isOk: true, message: "OTP sent to your registered mobile number" };
+      const response = {
+        isOk: true,
+        message: "OTP sent to your registered mobile number",
+      };
       if (isDev()) response._devOtp = otp;
       return res.status(200).json(response);
     }
@@ -1161,7 +1182,11 @@ export const editVerifyAccessSend = async (req, res) => {
         { passwordHash: 0, aadhaarHash: 0 },
       );
 
-      if (!candidate || !dobMatches(candidate.dob, dob) || !candidate.isActive) {
+      if (
+        !candidate ||
+        !dobMatches(candidate.dob, dob) ||
+        !candidate.isActive
+      ) {
         return res.status(401).json({
           isOk: false,
           message: "Details not found or do not match",
@@ -1206,7 +1231,11 @@ export const editVerifyAccessSend = async (req, res) => {
         },
       });
     } else if (mode === "aadhaar") {
-      if (!aadhaar || !/^\d{12}$/.test(aadhaar.trim()) || !verhoeffCheck(aadhaar.trim())) {
+      if (
+        !aadhaar ||
+        !/^\d{12}$/.test(aadhaar.trim()) ||
+        !verhoeffCheck(aadhaar.trim())
+      ) {
         return res
           .status(400)
           .json({ isOk: false, message: "Invalid Aadhaar number" });
@@ -1225,7 +1254,10 @@ export const editVerifyAccessSend = async (req, res) => {
           candidate.editWindowExpiresAt &&
           candidate.editWindowExpiresAt < new Date();
 
-        if (!editExpired && !(await checkOtpRateLimit(candidate.mobile, "edit_access_otp"))) {
+        if (
+          !editExpired &&
+          !(await checkOtpRateLimit(candidate.mobile, "edit_access_otp"))
+        ) {
           await Otp.deleteMany({
             phone: candidate.mobile,
             type: "edit_access_otp",
@@ -1262,7 +1294,10 @@ export const editVerifyAccessSend = async (req, res) => {
     } else {
       return res
         .status(400)
-        .json({ isOk: false, message: "Invalid mode. Use 'regid' or 'aadhaar'" });
+        .json({
+          isOk: false,
+          message: "Invalid mode. Use 'regid' or 'aadhaar'",
+        });
     }
   } catch (err) {
     console.error("editVerifyAccessSend error:", err);
