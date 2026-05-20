@@ -2,36 +2,34 @@ import HelpQuery from "../../models/HelpQuery.js";
 
 export const submitQuery = async (req, res) => {
   try {
-    const { name, email, mobile, subject, message } = req.body;
+    const { name, registrationId, queryCategory, email, mobile, message } =
+      req.body;
 
-    if (!name || !subject || !message) {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "name, subject, and message are required",
-          status: 400,
-        });
+    if (!name || !queryCategory || !message) {
+      return res.status(400).json({
+        isOk: false,
+        message: "name, queryCategory, and message are required",
+        status: 400,
+      });
     }
 
     const query = new HelpQuery({
       name,
+      registrationId,
+      queryCategory,
       email,
       mobile,
-      subject,
       message,
       tenantId: req.tenantId,
     });
 
     await query.save();
 
-    return res
-      .status(201)
-      .json({
-        isOk: true,
-        message: "Query submitted successfully",
-        status: 201,
-      });
+    return res.status(201).json({
+      isOk: true,
+      message: "Query submitted successfully",
+      status: 201,
+    });
   } catch (error) {
     console.error("Error in submitQuery:", error);
     return res
@@ -65,7 +63,7 @@ export const listQueries = async (req, res) => {
           $match: {
             $or: [
               { name: { $regex: match, $options: "i" } },
-              { subject: { $regex: match, $options: "i" } },
+              { queryCategory: { $regex: match, $options: "i" } },
               { email: { $regex: match, $options: "i" } },
             ],
           },

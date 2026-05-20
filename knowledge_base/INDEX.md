@@ -160,7 +160,7 @@
 
 Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 
-**State as of 2026-05-20:** P1, P2, P3, P7 complete. Web mobile responsive shipped (hamburger nav, overflow fix, centering). P4 hard-blocked (Q#8). P5 blocked (Q#2, Q#7, no contract). P6 depends on P4+P5. P8 partial (WhatsApp BSP Q#9). P9 not started.
+**State as of 2026-05-20 (session 2):** P1, P2, P3, P7 complete. P2 nav gaps fully resolved: Registration dropdown (Apply(New OTR)/Edit Registration/Find Registration ID), Online Application dropdown (Apply Online/Edit Application/Print Application), Fee + Call Letter standalone links. VM marquee API-driven with static fallback. Quick Links = 6 items per PRD §5.1.6. Careers "Details" PDF button added. Help.jsx wired with `useLang()`. i18n.js 6 new nav keys in EN/HI/GU. Multi-tenant branding: `getPublicBranding` serves single DB record (deferred). P4 hard-blocked (Q#8). P5 blocked (Q#2, Q#7, no contract). P6 depends on P4+P5. P8 partial (WhatsApp BSP Q#9). P9 not started.
 
 | Phase | File | Depends On | Status | Remaining Work |
 |-------|------|-----------|--------|----------------|

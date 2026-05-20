@@ -36,6 +36,7 @@ import CallLetters from "../pages/Recruitment/CallLetters";
 import RecruitmentNotices from "../pages/Recruitment/Notices";
 import NoticesForm from "../pages/Recruitment/NoticesForm";
 import HelpQueries from "../pages/Recruitment/HelpQueries";
+import SiteConfig from "../pages/Recruitment/SiteConfig";
 import TwoFactorSetup from "../pages/Setup/TwoFactorSetup";
 
 const authProtectedRoutes = [
@@ -120,6 +121,7 @@ const authProtectedRoutes = [
     { path: "/notice",       component: <RecruitmentNotices /> },
     { path: "/notice/add",   component: <NoticesForm /> },
     { path: "/help-queries", component: <HelpQueries /> },
+    { path: "/site-config",  component: <SiteConfig /> },
 
     { path: "/",  exact: true, component: <Navigate to="/dashboard" /> },
     { path: "*",  component: <Navigate to="/dashboard" /> },

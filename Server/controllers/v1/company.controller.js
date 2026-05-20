@@ -350,3 +350,26 @@ export const getCurrentUserDetails = async (req, res) => {
     });
   }
 };
+
+export const getPublicBranding = async (req, res) => {
+  try {
+    const company = await CompanyMasterModels.findOne({ isSuperAdmin: false });
+    if (!company) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "Company not found", status: 404 });
+    }
+    return res.status(200).json({
+      isOk: true,
+      data: {
+        name_en: company.companyName ?? "",
+        logo_url: company.logo ?? "",
+      },
+      status: 200,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};

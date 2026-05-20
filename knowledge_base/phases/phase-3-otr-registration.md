@@ -53,23 +53,23 @@
 
 #### Candidate Routes (`Server/routes/v1/otr.routes.js` — built)
 
-| Endpoint | Method | Auth | Purpose |
-|----------|--------|------|---------|
-| `/candidates/otp/aadhaar` | POST | None | Request Aadhaar OTP via UIDAI |
-| `/candidates/otp/aadhaar/verify` | POST | None | Verify Aadhaar OTP |
-| `/candidates/otp/phone` | POST | None | Send phone OTP (WhatsApp → SMS) |
-| `/candidates/otp/phone/verify` | POST | None | Verify phone OTP |
-| `/candidates/otp/email` | POST | None | Send email OTP |
-| `/candidates/otp/email/verify` | POST | None | Verify email OTP |
-| `/candidates/apply` | POST | Session (step 2+) | Submit each step's data |
-| `/candidates/apply/photo` | POST | Session | Upload photo (multipart, secureUpload) |
-| `/candidates/apply/signature` | POST | Session | Upload signature (multipart, secureUpload) |
-| `/candidates/apply/submit` | POST | Session | Final submit + CAPTCHA verify |
-| `/candidates/edit` | PATCH | Session / OTP | Edit allowed fields only |
-| `/candidates/find` | POST | None | Find Reg ID by mobile+DOB or Aadhaar+DOB |
-| `/candidates/auth/login` | POST | None | Login (Reg ID/Aadhaar + password) |
-| `/candidates/auth/logout` | POST | Session | Invalidate session |
-| `/candidates/auth/password/reset` | POST | OTP | Reset password |
+| Endpoint                          | Method | Auth              | Purpose                                    |
+| --------------------------------- | ------ | ----------------- | ------------------------------------------ |
+| `/candidates/otp/aadhaar`         | POST   | None              | Request Aadhaar OTP via UIDAI              |
+| `/candidates/otp/aadhaar/verify`  | POST   | None              | Verify Aadhaar OTP                         |
+| `/candidates/otp/phone`           | POST   | None              | Send phone OTP (WhatsApp → SMS)            |
+| `/candidates/otp/phone/verify`    | POST   | None              | Verify phone OTP                           |
+| `/candidates/otp/email`           | POST   | None              | Send email OTP                             |
+| `/candidates/otp/email/verify`    | POST   | None              | Verify email OTP                           |
+| `/candidates/apply`               | POST   | Session (step 2+) | Submit each step's data                    |
+| `/candidates/apply/photo`         | POST   | Session           | Upload photo (multipart, secureUpload)     |
+| `/candidates/apply/signature`     | POST   | Session           | Upload signature (multipart, secureUpload) |
+| `/candidates/apply/submit`        | POST   | Session           | Final submit + CAPTCHA verify              |
+| `/candidates/edit`                | PATCH  | Session / OTP     | Edit allowed fields only                   |
+| `/candidates/find`                | POST   | None              | Find Reg ID by mobile+DOB or Aadhaar+DOB   |
+| `/candidates/auth/login`          | POST   | None              | Login (Reg ID/Aadhaar + password)          |
+| `/candidates/auth/logout`         | POST   | Session           | Invalidate session                         |
+| `/candidates/auth/password/reset` | POST   | OTP               | Reset password                             |
 
 #### Business Logic
 - `aadhaar_hash + tenant_id` unique constraint enforces 1 Aadhaar = 1 Reg ID per tenant

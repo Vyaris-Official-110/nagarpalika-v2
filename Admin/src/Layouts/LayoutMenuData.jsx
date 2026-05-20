@@ -106,6 +106,7 @@ const Navdata = () => {
                 { id: "feePayments",    label: "Fee Payments",    link: "/fee-payments",  parentId: "recruitment" },
                 { id: "callLetters",    label: "Call Letters",    link: "/call-letters",  parentId: "recruitment" },
                 { id: "notices",        label: "Notices",         link: "/notice",        parentId: "recruitment" },
+                { id: "siteConfig",     label: "Site Config",     link: "/site-config",   parentId: "recruitment" },
             ],
         },
         {

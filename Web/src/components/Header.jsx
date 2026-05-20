@@ -6,27 +6,30 @@ import LoginModal from './LoginModal'
 import SiteMarquee from './SiteMarquee'
 
 const NAV = [
-  { path: '/',        key: 'nav.home',       fallback: 'HOME' },
-  { path: '/about',   key: 'nav.about',      fallback: 'ABOUT' },
-  { path: '/notices', key: 'nav.notices',    fallback: 'NOTICES' },
-  { path: '/results', key: 'nav.results',    fallback: 'RESULT' },
+  { path: '/',        key: 'nav.home',    fallback: 'HOME' },
+  { path: '/about',   key: 'nav.about',   fallback: 'ABOUT' },
+  { path: '/notices', key: 'nav.notices', fallback: 'NOTICES' },
+  { path: '/results', key: 'nav.results', fallback: 'RESULT' },
   {
     key: 'nav.registration', fallback: 'REGISTRATION',
     children: [
-      { path: '/otr',      key: 'nav.otr',      fallback: 'One-Time Registration (OTR)' },
-      { path: '/careers',  key: 'nav.careers',  fallback: 'Advertisements / ભરતી' },
+      { path: '/otr',               key: 'nav.otr',      fallback: 'Apply (New OTR)' },
+      { path: '/registration/edit', key: 'nav.reg.edit', fallback: 'Edit Registration' },
+      { path: '/otr/find',          key: 'nav.otr.find', fallback: 'Find Registration ID' },
     ],
   },
   {
     key: 'nav.apply', fallback: 'ONLINE APPLICATION',
     children: [
-      { path: '/apply',       key: 'nav.apply.form',  fallback: 'Apply Online' },
-      { path: '/callletter',  key: 'nav.callletter',  fallback: 'Call Letter' },
-      { path: '/application', key: 'nav.appstatus',   fallback: 'Application Status' },
+      { path: '/application',       key: 'nav.app.apply', fallback: 'Apply Online' },
+      { path: '/application/edit',  key: 'nav.app.edit',  fallback: 'Edit Application' },
+      { path: '/application/print', key: 'nav.app.print', fallback: 'Print Application' },
     ],
   },
-  { path: '/help',    key: 'nav.help',       fallback: 'HELP' },
-  { path: '/contact', key: 'nav.contact',    fallback: 'CONTACT' },
+  { path: '/fee',        key: 'nav.fee',        fallback: 'FEE' },
+  { path: '/callletter', key: 'nav.callletter', fallback: 'CALL LETTER' },
+  { path: '/help',       key: 'nav.help',       fallback: 'HELP' },
+  { path: '/contact',    key: 'nav.contact',    fallback: 'CONTACT' },
 ]
 
 function Dropdown({ item, pathname, t }) {

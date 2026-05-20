@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { submitHelpQuery } from '../api/index'
+import { useLang } from '../context/LangContext'
 
 const FAQS = [
   {
@@ -25,8 +26,9 @@ const FAQS = [
 ]
 
 export default function Help() {
+  const { t } = useLang()
   const [open, setOpen] = useState(null)
-  const [form, setForm] = useState({ name: '', email: '', mobile: '', subject: '', message: '' })
+  const [form, setForm] = useState({ name: '', registrationId: '', queryCategory: '', email: '', mobile: '', message: '' })
   const [status, setStatus] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -44,7 +46,7 @@ export default function Help() {
     try {
       await submitHelpQuery(form)
       setStatus('success')
-      setForm({ name: '', email: '', mobile: '', subject: '', message: '' })
+      setForm({ name: '', registrationId: '', queryCategory: '', email: '', mobile: '', message: '' })
     } catch {
       setStatus('error')
     } finally {
@@ -113,17 +115,35 @@ export default function Help() {
               />
             </label>
             <label>
-              Email Address
+              Registration ID
               <input
-                type="email"
-                name="email"
-                value={form.email}
+                type="text"
+                name="registrationId"
+                value={form.registrationId}
                 onChange={handleChange}
-                placeholder="e.g. ramesh@example.com"
+                placeholder="e.g. 10001234"
+                maxLength={20}
               />
             </label>
           </div>
           <div className="form-row">
+            <label>
+              Query Category <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
+              <select
+                name="queryCategory"
+                value={form.queryCategory}
+                onChange={handleChange}
+                required
+              >
+                <option value="">— Select category —</option>
+                <option value="Registration">Registration (OTR)</option>
+                <option value="Application">Online Application</option>
+                <option value="Fee Payment">Fee Payment</option>
+                <option value="Call Letter">Call Letter / Admit Card</option>
+                <option value="Technical Issue">Technical Issue</option>
+                <option value="Other">Other</option>
+              </select>
+            </label>
             <label>
               Mobile Number
               <input
@@ -135,31 +155,22 @@ export default function Help() {
                 maxLength={10}
               />
             </label>
+          </div>
+          <div className="form-full">
             <label>
-              Subject <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
-              <input
-                type="text"
-                name="subject"
-                value={form.subject}
+              Description <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
+              <textarea
+                name="message"
+                value={form.message}
                 onChange={handleChange}
                 required
-                placeholder="e.g. Call letter not showing"
+                rows={5}
+                placeholder="Describe your issue in detail…"
+                style={{ resize: 'vertical' }}
               />
             </label>
           </div>
-          <label style={{ display: 'block', marginTop: 10 }}>
-            Message <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
-            <textarea
-              name="message"
-              value={form.message}
-              onChange={handleChange}
-              required
-              rows={5}
-              placeholder="Describe your issue in detail…"
-              style={{ width: '100%', resize: 'vertical' }}
-            />
-          </label>
-          <div style={{ marginTop: 12, textAlign: 'right' }}>
+          <div className="form-actions" style={{ textAlign: 'right' }}>
             <button type="submit" className="btn-primary" disabled={submitting}>
               {submitting ? 'Submitting…' : 'Submit Query'}
             </button>

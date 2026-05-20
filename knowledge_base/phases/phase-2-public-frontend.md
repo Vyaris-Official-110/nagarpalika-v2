@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 2 of 9 |
-| **Status** | 🟢 Complete — /careers + /notices API-driven; /help page; nav dropdowns; Home.jsx branding bar + ticker bars + live notices + Important Instructions from API |
+| **Status** | 🟢 Complete — all 10 PRD §5.1.2 nav gaps resolved: Registration dropdown (Apply(New OTR)/Edit Registration/Find Registration ID), Online Application dropdown (Apply Online/Edit Application/Print Application), Fee + Call Letter standalone. VM marquee API-driven (`liveNotices` → `VM_ITEMS` fallback). Quick Links 6 items per §5.1.6. Careers "Details" button links to `/api/v1/advertisements/:id/pdf` (shown only when `pdfPath` exists). Help.jsx wired with `useLang()`. i18n.js: 6 new nav keys added to EN/HI/GU. Note: `getPublicBranding` ignores `req.tenantId` (serves single DB record); multi-tenant branding deferred to go-live infra config. |
 | **Depends On** | Phase 1 (Advertisement, Notice, Candidate models + routes must exist) |
 | **Blocks** | Phase 3 (nav restructure needed before OTR flow) |
 | **PRD Sections** | §5 M1 Home Page · §10 Existing Frontend Carry-Over |

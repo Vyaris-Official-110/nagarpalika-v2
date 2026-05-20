@@ -1,6 +1,6 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-20 session-end (P1+P2+P3+P7 complete + all audit fixes + Web mobile responsive — branch feat/p3-otr-registration)
+> Last updated: 2026-05-20 session-end-2 (P2 nav gaps resolved: correct Registration/Online Application dropdowns, Fee+CallLetter standalone, VM marquee API-driven, Quick Links 6 items, Careers PDF Details button, Help useLang, i18n.js 6 nav keys — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
 > **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped + audited. Application/Fee/CallLetter citizen flows blocked.
 
@@ -54,7 +54,7 @@ Nagarpalika/
 
 | File | Contents |
 |------|----------|
-| `src/data/i18n.js` | 40+ translation keys × 3 languages (EN/HI/GU) |
+| `src/data/i18n.js` | 46+ translation keys × 3 languages (EN/HI/GU) — added `nav.reg.edit`, `nav.otr.find`, `nav.app.apply`, `nav.app.edit`, `nav.app.print`, `nav.fee` |
 | `src/api/index.js` | Axios instance — base URL from `VITE_API_URL`, `withCredentials: true` |
 
 ### Contexts & API Clients
@@ -126,7 +126,8 @@ Nagarpalika/
 | `/call-letters` | `CallLetters.jsx` | Call letter list + enable/disable |
 | `/notice` | `Notices.jsx` | Notice list + publish/delete |
 | `/notice/add` | `NoticesForm.jsx` | Create notice |
-| `/help-queries` | `HelpQueries.jsx` | Help query inbox |
+| `/help-queries` | `HelpQueries.jsx` | Help query inbox — columns: Sr, Name, Reg. ID, Query Category, Mobile, Message, Status, Date, Action |
+| `/site-config` | `SiteConfig.jsx` | Admin-editable site config — manages `helpline`, `otr_status_message`, `important_instructions` keys via `GET/PATCH /api/v1/config/:key` |
 | `/2fa-setup` | `TwoFactorSetup.jsx` | Admin 2FA setup — shows status, QR, verify + enable flow |
 | `/profile` | `UserProfile.jsx` | Admin profile |
 | `/employee` | `Employee.jsx` | Admin user management |
@@ -185,7 +186,7 @@ Nagarpalika/
 | `FeePayment` | `models/FeePayment.js` | paymentId, applicationRefNo, amount, gatewayTxnId, mode, status (pending/success/failed/refunded), receiptPath, paidAt, tenantId |
 | `CallLetter` | `models/CallLetter.js` | registrationId, advtNo, rollNumber, examDate, venue, availableFrom, enabled, tenantId |
 | `Notice` | `models/Notice.js` | title, type (notice/circular/tender/press/recruitment/result/important_instruction), refNo, pdfPath, status (draft/published), publishedAt, expiresAt, tenantId |
-| `HelpQuery` | `models/HelpQuery.js` | name, email, mobile, subject, message, status (open/in_progress/resolved), tenantId |
+| `HelpQuery` | `models/HelpQuery.js` | name, mobile, registrationId, queryCategory, message, status (open/replied/closed), tenantId |
 | `CompanyMaster` | `models/CompanyMaster.js` | Municipality config (kept from HMS) |
 | `Employee` | `models/Employee.js` | Admin user (kept from HMS) |
 | `RoleMaster` | `models/RoleMaster.js` | Admin roles |

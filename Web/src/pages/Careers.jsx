@@ -112,7 +112,17 @@ export default function Careers() {
                     <td>₹{j.applicationFee}</td>
                     <td>{endDate}</td>
                     <td><span className={`badge ${STATUS_CSS[j.status] ?? j.status}`}>{STATUS_LABEL[j.status] ?? j.status}</span></td>
-                    <td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      {j.pdfPath && (
+                        <a
+                          href={`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v1/advertisements/${j._id}/pdf`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--ojas-navy)', fontWeight: 700, marginRight: 8 }}
+                        >
+                          Details
+                        </a>
+                      )}
                       <a href="#" style={{ color: 'var(--ojas-saffron-deep)', fontWeight: 700 }}>{t('car.apply')}</a>
                     </td>
                   </tr>
