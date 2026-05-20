@@ -430,8 +430,16 @@ export const loginEmployee = async (req, res) => {
           status: 200,
         });
       }
-      const valid = totpVerify({
+      if (employee.twoFactorLastUsedToken === totpToken) {
+        return res.status(401).json({
+          isOk: false,
+          message: "TOTP code already used. Wait for next code.",
+          status: 401,
+        });
+      }
+      const { valid } = await totpVerify({
         token: totpToken,
+        type: "totp",
         secret: employee.twoFactorSecret,
       });
       if (!valid) {
@@ -439,6 +447,7 @@ export const loginEmployee = async (req, res) => {
           .status(401)
           .json({ isOk: false, message: "Invalid 2FA code", status: 401 });
       }
+      employee.twoFactorLastUsedToken = totpToken;
     }
 
     // Reset lockout counters on successful login
@@ -470,23 +479,28 @@ export const loginEmployee = async (req, res) => {
 
 export const setupTwoFactor = async (req, res) => {
   try {
-    const employee = await EmployeeModels.findById(req.user.id);
-    if (!employee) {
+    const isAdmin = req.user.role === "ADMIN";
+    const user = isAdmin
+      ? await CompanyMaster.findById(req.user.id)
+      : await EmployeeModels.findById(req.user.id);
+
+    if (!user) {
       return res
         .status(404)
-        .json({ isOk: false, message: "Employee not found", status: 404 });
+        .json({ isOk: false, message: "User not found", status: 404 });
     }
 
+    const account = isAdmin ? user.email : user.emailOffice;
     const secret = generateSecret();
     const otpauth = generateURI({
       secret,
-      account: employee.emailOffice,
+      account,
       issuer: "NagarPalika Admin",
       type: "totp",
     });
 
-    employee.twoFactorSecret = secret;
-    await employee.save();
+    user.twoFactorSecret = secret;
+    await user.save();
 
     return res
       .status(200)
@@ -499,25 +513,61 @@ export const setupTwoFactor = async (req, res) => {
   }
 };
 
+export const resetTwoFactor = async (req, res) => {
+  try {
+    const isAdmin = req.user.role === "ADMIN";
+    const user = isAdmin
+      ? await CompanyMaster.findById(req.user.id)
+      : await EmployeeModels.findById(req.user.id);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ isOk: false, message: "User not found", status: 404 });
+    }
+
+    user.twoFactorEnabled = false;
+    user.twoFactorSecret = "";
+    user.twoFactorLastUsedToken = "";
+    await user.save();
+
+    return res.status(200).json({
+      isOk: true,
+      message: "2FA reset. Set up again to re-enroll.",
+      status: 200,
+    });
+  } catch (error) {
+    console.error("resetTwoFactor error:", error);
+    return res
+      .status(500)
+      .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
 export const enableTwoFactor = async (req, res) => {
   try {
     const { totpToken } = req.body;
-    const employee = await EmployeeModels.findById(req.user.id);
-    if (!employee) {
+    const isAdmin = req.user.role === "ADMIN";
+    const user = isAdmin
+      ? await CompanyMaster.findById(req.user.id)
+      : await EmployeeModels.findById(req.user.id);
+
+    if (!user) {
       return res
         .status(404)
-        .json({ isOk: false, message: "Employee not found", status: 404 });
+        .json({ isOk: false, message: "User not found", status: 404 });
     }
 
-    if (!employee.twoFactorSecret) {
+    if (!user.twoFactorSecret) {
       return res
         .status(400)
         .json({ isOk: false, message: "Run setup first", status: 400 });
     }
 
-    const valid = totpVerify({
+    const { valid } = await totpVerify({
       token: totpToken,
-      secret: employee.twoFactorSecret,
+      type: "totp",
+      secret: user.twoFactorSecret,
     });
     if (!valid) {
       return res
@@ -525,8 +575,8 @@ export const enableTwoFactor = async (req, res) => {
         .json({ isOk: false, message: "Invalid code", status: 400 });
     }
 
-    employee.twoFactorEnabled = true;
-    await employee.save();
+    user.twoFactorEnabled = true;
+    await user.save();
 
     return res
       .status(200)
@@ -582,6 +632,7 @@ export const getCurrentUser = async (req, res) => {
       isActive: user.isActive,
       departmentId: user.departmentId,
       roleId: user.roleId,
+      twoFactorEnabled: user.twoFactorEnabled ?? false,
     };
 
     if (role === "DOCTOR") {

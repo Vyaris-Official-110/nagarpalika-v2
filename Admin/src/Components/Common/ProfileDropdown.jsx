@@ -65,6 +65,11 @@ const ProfileDropdown = () => {
                         <span className="align-middle">Profile</span>
                     </DropdownItem>
 
+                    <DropdownItem href="/2fa-setup" as="Link">
+                        <i className="mdi mdi-shield-key text-muted fs-16 align-middle me-1"></i>
+                        <span className="align-middle">2FA Setup</span>
+                    </DropdownItem>
+
                     <DropdownItem onClick={handleLogout}>
                         <i className="mdi mdi-logout text-muted fs-16 align-middle me-1"></i>{" "}
                         <span className="align-middle" data-key="t-logout">

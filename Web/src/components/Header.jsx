@@ -79,6 +79,9 @@ export default function Header() {
   const navigate = useNavigate()
   const { candidate, logout } = useCandidateAuth()
   const [showLogin, setShowLogin] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  useEffect(() => { setMobileNavOpen(false) }, [pathname])
 
   async function handleLogout() {
     await logout()
@@ -156,19 +159,30 @@ export default function Header() {
       </div>
 
       <nav className="nav-row" aria-label="Main navigation">
-        {NAV.map(item =>
-          item.children ? (
-            <Dropdown key={item.key} item={item} pathname={pathname} t={t} />
-          ) : (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={pathname === item.path ? 'active' : ''}
-            >
-              {t(item.key) || item.fallback}
-            </Link>
-          )
-        )}
+        <button
+          type="button"
+          className="nav-hamburger"
+          aria-expanded={mobileNavOpen}
+          aria-label={mobileNavOpen ? 'Close navigation' : 'Open navigation'}
+          onClick={() => setMobileNavOpen(o => !o)}
+        >
+          {mobileNavOpen ? '✕' : '☰'}
+        </button>
+        <div className={`nav-items${mobileNavOpen ? ' open' : ''}`}>
+          {NAV.map(item =>
+            item.children ? (
+              <Dropdown key={item.key} item={item} pathname={pathname} t={t} />
+            ) : (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={pathname === item.path ? 'active' : ''}
+              >
+                {t(item.key) || item.fallback}
+              </Link>
+            )
+          )}
+        </div>
       </nav>
 
       <SiteMarquee />

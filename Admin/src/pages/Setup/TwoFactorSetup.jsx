@@ -10,6 +10,8 @@ export default function TwoFactorSetup() {
   const [loading, setLoading] = useState(true);
   const [setupLoading, setSetupLoading] = useState(false);
   const [enableLoading, setEnableLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -38,6 +40,24 @@ export default function TwoFactorSetup() {
     }
   };
 
+  const handleReset = async () => {
+    setError(null);
+    setSuccess(null);
+    setResetLoading(true);
+    try {
+      await api.post(ENDPOINTS.EMPLOYEES_2FA.RESET);
+      setStatus({ twoFactorEnabled: false });
+      setSetupData(null);
+      setVerifyToken("");
+      setConfirmReset(false);
+      setSuccess("2FA has been reset. Click 'Set Up 2FA' to re-enroll.");
+    } catch (err) {
+      setError(err?.response?.data?.message ?? "Reset failed. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleEnable = async () => {
     if (!verifyToken.trim()) {
       setError("Enter the 6-digit code from your authenticator app.");
@@ -46,7 +66,7 @@ export default function TwoFactorSetup() {
     setError(null);
     setEnableLoading(true);
     try {
-      await api.post(ENDPOINTS.EMPLOYEES_2FA.ENABLE, { token: verifyToken.trim() });
+      await api.post(ENDPOINTS.EMPLOYEES_2FA.ENABLE, { totpToken: verifyToken.trim() });
       setSuccess("Two-factor authentication enabled successfully.");
       setStatus({ twoFactorEnabled: true });
       setSetupData(null);
@@ -87,6 +107,26 @@ export default function TwoFactorSetup() {
             <Button color="primary" onClick={handleSetup} disabled={setupLoading}>
               {setupLoading ? <Spinner size="sm" /> : "Set Up 2FA"}
             </Button>
+          )}
+
+          {status?.twoFactorEnabled && !setupData && !confirmReset && (
+            <Button color="warning" onClick={() => setConfirmReset(true)}>
+              Re-enroll 2FA (lost device / broken pairing)
+            </Button>
+          )}
+
+          {status?.twoFactorEnabled && confirmReset && (
+            <div className="mt-2 p-3 border border-warning rounded">
+              <p className="mb-2 text-warning fw-semibold">
+                This will remove your current 2FA pairing. You will need to scan a new QR code to re-enroll.
+              </p>
+              <Button color="danger" onClick={handleReset} disabled={resetLoading} className="me-2">
+                {resetLoading ? <Spinner size="sm" /> : "Yes, Reset 2FA"}
+              </Button>
+              <Button color="secondary" onClick={() => setConfirmReset(false)} disabled={resetLoading}>
+                Cancel
+              </Button>
+            </div>
           )}
         </CardBody>
       </Card>

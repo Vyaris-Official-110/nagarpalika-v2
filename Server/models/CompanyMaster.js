@@ -76,6 +76,9 @@ const CompanyMasterSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    twoFactorEnabled: { type: Boolean, default: false },
+    twoFactorSecret: { type: String, default: "" },
+    twoFactorLastUsedToken: { type: String, default: "" },
   },
   { timestamps: true },
 );

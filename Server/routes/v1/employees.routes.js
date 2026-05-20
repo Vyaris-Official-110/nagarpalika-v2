@@ -16,6 +16,7 @@ import {
   verifySession,
   setupTwoFactor,
   enableTwoFactor,
+  resetTwoFactor,
 } from "../../controllers/v1/employee.controller.js";
 import {
   loginValidation,
@@ -546,6 +547,11 @@ router.post(
   "/auth/2fa/enable",
   authMiddleware(["ADMIN", "SUPER_ADMIN", "DEPT_ADMIN", "EMPLOYEE"]),
   enableTwoFactor,
+);
+router.post(
+  "/auth/2fa/reset",
+  authMiddleware(["ADMIN", "SUPER_ADMIN", "DEPT_ADMIN", "EMPLOYEE"]),
+  resetTwoFactor,
 );
 
 export default router;

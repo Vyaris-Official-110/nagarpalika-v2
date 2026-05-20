@@ -25,6 +25,8 @@
 
 Nav restructure done: Registration dropdown (Apply/Edit/Find) + Online Application dropdown + Login modal trigger in Header.jsx.
 
+Mobile responsive implemented: hamburger menu (☰/✕ toggle, ≤768px) in `Header.jsx`; `site.css` breakpoints at 480/600/768/900/1024px; `overflow-x: hidden` on html/body eliminates horizontal scroll; content centering (text-align + justify-content) on mobile for hero, headings, brand-bar, footer, nav; `table.ojas` min-width removed ≤600px.
+
 ---
 
 ## Deliverables

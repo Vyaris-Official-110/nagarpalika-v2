@@ -188,6 +188,7 @@ export const ENDPOINTS = {
     EMPLOYEES_2FA: {
         SETUP:  `${V1}/auth/2fa/setup`,
         ENABLE: `${V1}/auth/2fa/enable`,
+        RESET:  `${V1}/auth/2fa/reset`,
     },
 };
 

@@ -1,6 +1,6 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-19 session-end (P1+P2+P3+P7 complete + all audit fixes applied — branch feat/p3-otr-registration)
+> Last updated: 2026-05-20 session-end (P1+P2+P3+P7 complete + all audit fixes + Web mobile responsive — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
 > **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped + audited. Application/Fee/CallLetter citizen flows blocked.
 
@@ -25,7 +25,7 @@ Nagarpalika/
 | **Framework** | React 18.3.1 |
 | **Build tool** | Vite 5.4.0 |
 | **Router** | React Router DOM 6.26.0 |
-| **Styling** | Vanilla CSS — `site.css` + `ojas-tokens.css` (CSS custom properties, no Tailwind/MUI) |
+| **Styling** | Vanilla CSS — `site.css` + `ojas-tokens.css` (CSS custom properties, no Tailwind/MUI). Mobile responsive: hamburger nav (≤768px), `overflow-x: hidden` on html/body, centered content on mobile via media queries (360px / 768px / 1280px breakpoints) |
 | **Fonts** | Noto Sans + Noto Sans Gujarati (Google Fonts) |
 | **i18n** | Custom `LangContext` — EN / HI / GU, persisted in localStorage |
 | **State** | React hooks only (useState, useContext) |

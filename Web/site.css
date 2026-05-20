@@ -4,12 +4,14 @@
 @import url('ojas-tokens.css');
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { background: var(--bg-page); }
+html { overflow-x: hidden; }
+html, body { background: var(--bg-page); max-width: 100%; }
 body {
   font-family: var(--font-sans);
   font-size: var(--fs-13);
   line-height: var(--lh-body);
   color: var(--fg1);
+  overflow-x: hidden;
 }
 a { color: var(--fg-link); text-decoration: underline; }
 a:hover { color: var(--fg-link-hover); }
@@ -60,12 +62,40 @@ a:visited { color: var(--fg-link-visited); }
   background: var(--ojas-saffron);
   color: #fff;
   padding: 8px 24px;
-  display: flex;
-  gap: 22px;
   font: 700 12px/1 var(--font-sans);
   border-bottom: 1px solid var(--ojas-saffron-deep);
+}
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: 2px solid rgba(255,255,255,0.6);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 10px;
+  line-height: 1;
+  border-radius: 2px;
+  margin: 4px 0;
+}
+.nav-items {
+  display: flex;
+  gap: 22px;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+}
+.nav-items > a {
+  color: #fff;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  padding: 2px 0;
+}
+.nav-items > a:hover { text-decoration: underline; }
+.nav-items > a.active {
+  border-bottom: 2px solid #fff;
+  padding-bottom: 0;
 }
 .nav-row a {
   color: #fff;
@@ -799,13 +829,18 @@ ul.ojas li a { color: var(--fg-link); }
 img { max-width: 100%; height: auto; }
 .box-body { overflow-x: auto; }
 table.ojas { min-width: 540px; }
+@media (max-width: 600px) {
+  table.ojas { min-width: 100%; font-size: 11.5px; }
+  table.ojas th, table.ojas td { padding: 6px 8px; }
+}
 
 @media (max-width: 1024px) {
   .three-col { grid-template-columns: 1fr 1fr; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
   .container { padding: 14px 18px; }
   .brand-bar { padding: 10px 18px; gap: 12px; flex-wrap: wrap; }
-  .nav-row { padding: 8px 16px; gap: 14px; }
+  .nav-row { padding: 8px 16px; }
+  .nav-items { gap: 14px; }
 }
 
 @media (max-width: 900px) {
@@ -815,29 +850,75 @@ table.ojas { min-width: 540px; }
 @media (max-width: 768px) {
   .three-col { grid-template-columns: 1fr; }
   .fact-strip { grid-template-columns: repeat(2, 1fr); }
-  .footer-grid { grid-template-columns: 1fr; gap: 16px; padding: 16px 12px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 16px; padding: 16px 12px; text-align: center; }
+  .footer-grid a { text-align: center; }
   .form-row { grid-template-columns: 1fr; gap: 12px; }
+  .form-actions { justify-content: center; flex-wrap: wrap; }
   .container { padding: 10px 12px; }
-  .brand-bar { padding: 8px 12px; gap: 10px; }
+  .brand-bar { padding: 8px 12px; gap: 10px; justify-content: center; text-align: center; }
   .brand-bar img { height: 40px; }
+  .brand-bar > div { text-align: center; }
   .brand-title { font-size: 16px; white-space: normal; }
   .brand-sub { font-size: 10px; }
-  .brand-utility { margin-left: 0; flex-wrap: wrap; gap: 6px; width: 100%; }
-  .nav-row { padding: 6px 12px; gap: 10px; font-size: 11px; }
+  .brand-utility { margin-left: 0; flex-wrap: wrap; gap: 6px; width: 100%; justify-content: center; }
+  /* hamburger nav */
+  .nav-row { padding: 6px 12px; font-size: 11px; }
+  .nav-hamburger { display: block; }
+  .nav-items {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    align-items: stretch;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+  .nav-items.open { display: flex; }
+  .nav-items > a {
+    white-space: normal;
+    padding: 10px 4px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .nav-items > a:last-child { border-bottom: none; }
+  .nav-dropdown { width: 100%; }
+  .nav-dropdown-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+  }
+  .nav-dropdown-menu {
+    position: static;
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    min-width: unset;
+    width: 100%;
+  }
+  .nav-dropdown-menu a { text-align: center; padding: 10px; }
+  /* content centering */
+  .hero-strip { text-align: center; }
   .hero-strip h1 { font-size: 18px; }
   .hero-strip .guj { font-size: 12px; }
-  .page-heading { flex-wrap: wrap; gap: 6px; }
+  .page-heading { flex-wrap: wrap; gap: 6px; justify-content: center; text-align: center; }
   .page-heading h1 { font-size: 16px; }
   .page-heading .guj { margin-left: 0; }
-  .advt-banner { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .advt-banner { flex-direction: column; align-items: center; gap: 6px; text-align: center; }
   .news-list li { grid-template-columns: 56px 1fr; gap: 10px; }
+  .news-body { text-align: left; }
   .vmarquee { height: 280px; }
-  .cm-block { grid-template-columns: 1fr; }
+  .cm-block { grid-template-columns: 1fr; text-align: center; }
   .cm-portrait { width: 100%; height: 160px; }
+  .cm-quote { text-align: left; }
   .cal-cell { min-height: 60px; }
-  .box-title { flex-wrap: wrap; gap: 4px; padding: 8px 10px; font-size: 13px; }
+  .box-title { flex-wrap: wrap; gap: 4px; padding: 8px 10px; font-size: 13px; justify-content: center; text-align: center; }
   .box-title .guj { margin-left: 0; font-size: 10px; }
   .box-body { padding: 12px; }
+  .filter-row { justify-content: center; }
+  .fact { text-align: center; }
+  .legend { justify-content: center; flex-wrap: wrap; }
+  .notice { text-align: center; }
+  .up-list li { text-align: left; }
 }
 
 @media (max-width: 480px) {
@@ -854,8 +935,9 @@ table.ojas { min-width: 540px; }
   .cal-event { font-size: 9px; }
   .news-day { font-size: 14px; }
   .news-mo { font-size: 9px; }
-  .nav-row { padding: 6px 8px; gap: 6px 12px; font-size: 10.5px; letter-spacing: .02em; }
-  .nav-row a { padding: 3px 0; }
+  .nav-row { padding: 6px 8px; font-size: 10.5px; }
+  .brand-title { font-size: 14px; }
+  .brand-bar img { height: 34px; }
 }
 
 /* ===== OTR REGISTRATION STEPPER ===== */
@@ -986,7 +1068,8 @@ table.ojas { min-width: 540px; }
   to   { transform: translateX(-100%); }
 }
 @media (max-width: 768px) {
-  .branding-bar-inner { gap: 8px; padding: 8px 10px; }
+  .branding-bar-inner { gap: 8px; padding: 8px 10px; justify-content: center; text-align: center; }
   .branding-emblem, .branding-logo { height: 38px; }
   .branding-name-en { font-size: 13px; }
+  .branding-text { text-align: center; }
 }

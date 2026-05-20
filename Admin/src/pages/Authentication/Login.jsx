@@ -238,6 +238,9 @@ const Login = () => {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const [totpMode, setTotpMode] = useState(false);
+    const [totpToken, setTotpToken] = useState("");
+
     const [isLoginLoading, setIsLoginLoading] = useState(false);
     const [isSendOtpLoading, setIsSendOtpLoading] = useState(false);
     const [isResendOtpLoading, setIsResendOtpLoading] = useState(false);
@@ -301,6 +304,37 @@ const Login = () => {
 
     const login = async (e) => {
         if (e) e.preventDefault();
+
+        if (totpMode) {
+            if (!totpToken || totpToken.length !== 6) {
+                toast.error("Enter your 6-digit authenticator code.");
+                return;
+            }
+            setIsLoginLoading(true);
+            try {
+                const res = await loginCompany({
+                    email: values.email,
+                    password: values.password,
+                    totpToken,
+                });
+                if (res.data?.isOk) {
+                    localStorage.setItem("role", res.data.role);
+                    setAdminData({ ...res.data.data });
+                    fetchMenus();
+                    navigate("/dashboard");
+                } else {
+                    toast.error(res.data?.message || "Invalid authenticator code.");
+                }
+            } catch (error) {
+                toast.error(
+                    error?.response?.data?.message || "An error occurred. Please try again."
+                );
+            } finally {
+                setIsLoginLoading(false);
+            }
+            return;
+        }
+
         setIsSubmit(true);
         const errs = validate(values);
         setFormErrors(errs);
@@ -312,6 +346,10 @@ const Login = () => {
                 email: values.email,
                 password: values.password,
             });
+            if (res.data?.requireTotp) {
+                setTotpMode(true);
+                return;
+            }
             if (res.data?.isOk) {
                 localStorage.setItem("role", res.data.role);
                 setAdminData({ ...res.data.data });
@@ -475,6 +513,64 @@ const Login = () => {
     };
 
     document.title = "Sign in · Vyaris HMS";
+
+    const renderTotpForm = () => (
+        <Form onSubmit={login}>
+            <div className="vy-auth__eyebrow">2FA Verification</div>
+            <h1 className="vy-auth__form-title">Authenticator code</h1>
+            <p className="vy-auth__form-sub">
+                Open your authenticator app and enter the 6-digit code for this account.
+            </p>
+            <div className="mb-3">
+                <Label htmlFor="totp-input" className="form-label">Code</Label>
+                <Input
+                    id="totp-input"
+                    name="totpToken"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={totpToken}
+                    onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, ""))}
+                    className="form-control"
+                    autoFocus
+                />
+            </div>
+            <div className="mt-4">
+                <Button
+                    type="submit"
+                    className="vy-btn-primary"
+                    disabled={isLoginLoading}
+                >
+                    {isLoginLoading ? (
+                        <>
+                            <span
+                                className="spinner-border spinner-border-sm me-2"
+                                role="status"
+                                aria-hidden="true"
+                            ></span>
+                            Verifying…
+                        </>
+                    ) : (
+                        "Verify"
+                    )}
+                </Button>
+            </div>
+            <div className="mt-3 text-center">
+                <a
+                    href="#"
+                    className="vy-link"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setTotpMode(false);
+                        setTotpToken("");
+                    }}
+                >
+                    ← Back to sign in
+                </a>
+            </div>
+        </Form>
+    );
 
     const renderLoginForm = () => (
         <Form onSubmit={login}>
@@ -793,7 +889,11 @@ const Login = () => {
                     <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 32 }}>
                         <img src={vyarisMark} alt="Vyaris mark" style={{ height: 32 }} />
                     </div>
-                    {!forgotPasswordMode ? renderLoginForm() : renderForgotPasswordForm()}
+                    {totpMode
+                        ? renderTotpForm()
+                        : !forgotPasswordMode
+                        ? renderLoginForm()
+                        : renderForgotPasswordForm()}
                 </section>
             </div>
         </>

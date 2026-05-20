@@ -160,7 +160,7 @@
 
 Build order is sequential. 🟡 = partial, 🔴 = not started, 🟢 = done.
 
-**State as of 2026-05-19:** P1, P2, P3, P7 complete. P4 hard-blocked (Q#8). P5 blocked (Q#2, Q#7, no contract). P6 depends on P4+P5. P8 partial (WhatsApp BSP Q#9). P9 not started.
+**State as of 2026-05-20:** P1, P2, P3, P7 complete. Web mobile responsive shipped (hamburger nav, overflow fix, centering). P4 hard-blocked (Q#8). P5 blocked (Q#2, Q#7, no contract). P6 depends on P4+P5. P8 partial (WhatsApp BSP Q#9). P9 not started.
 
 | Phase | File | Depends On | Status | Remaining Work |
 |-------|------|-----------|--------|----------------|
@@ -216,4 +216,4 @@ When adding a new document:
 2. Add full entry under correct folder section
 3. Fill **Summary** (3–5 bullets), **Sections** table, **Tags**
 
-*Last updated: 2026-05-19*
+*Last updated: 2026-05-20*

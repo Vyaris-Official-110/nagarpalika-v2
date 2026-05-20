@@ -59,7 +59,8 @@ const EmployeeSchema = new mongoose.Schema(
 
     // 2FA — PRD §9.1, §5.8.1
     twoFactorEnabled: { type: Boolean, default: false },
-    twoFactorSecret: { type: String, default: "" }, // TOTP base32 secret
+    twoFactorSecret: { type: String, default: "" },
+    twoFactorLastUsedToken: { type: String, default: "" },
     loginAttempts: { type: Number, default: 0 },
     lockoutUntil: { type: Date },
 

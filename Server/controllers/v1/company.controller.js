@@ -3,6 +3,7 @@ import EmployeeModels from "../../models/Employee.js";
 import bcrypt from "bcrypt";
 import fs from "fs";
 import path from "path";
+import { verify as totpVerify } from "otplib";
 
 export const createCompanyMaster = async (req, res) => {
   try {
@@ -43,7 +44,8 @@ export const createCompanyMaster = async (req, res) => {
         return res.status(401).json({
           isOk: false,
           status: 401,
-          message: "Company already provisioned. Authentication required to create additional companies.",
+          message:
+            "Company already provisioned. Authentication required to create additional companies.",
         });
       }
     }
@@ -161,7 +163,7 @@ export const updateCompanyMaster = async (req, res) => {
 
 export const loginCompany = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, totpToken } = req.body;
 
     let user = null;
     let role = null;
@@ -213,6 +215,37 @@ export const loginCompany = async (req, res) => {
         error: "Invalid credentials",
         status: 401,
       });
+    }
+
+    if (user.twoFactorEnabled) {
+      if (!totpToken) {
+        return res.status(200).json({
+          isOk: true,
+          requireTotp: true,
+          message: "TOTP required",
+        });
+      }
+      if (user.twoFactorLastUsedToken === totpToken) {
+        return res.status(401).json({
+          isOk: false,
+          message: "TOTP code already used. Wait for next code.",
+          status: 401,
+        });
+      }
+      const { valid } = await totpVerify({
+        token: totpToken,
+        type: "totp",
+        secret: user.twoFactorSecret,
+      });
+      if (!valid) {
+        return res.status(401).json({
+          isOk: false,
+          message: "Invalid TOTP code",
+          status: 401,
+        });
+      }
+      user.twoFactorLastUsedToken = totpToken;
+      await user.save();
     }
 
     const company = await CompanyMasterModels.findOne({ isSuperAdmin: false });
