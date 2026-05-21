@@ -60,7 +60,7 @@ nagarpalika-v2/
 | P4 · Application | 🔴 Not started | Apply flow + edit window + print PDF | **Q#8: form fields unresolved (HARD BLOCK)** |
 | P5 · Fee Payment | 🔴 Not started | Payment gateway adapter + webhook HMAC + PDF receipt | Q#2 (online-only?), Q#7 (gateway choice), contract not signed |
 | P6 · Call Letter | 🔴 Not started | Eligibility check + signed download token + admit card PDF | Depends on P4, P5 |
-| P7 · Admin Panel | 🟢 Done | 6 recruitment pages + fee reconciliation + manual verify + 2FA UI page (`/2fa-setup`) + advertisement PDF upload + `/site-config` page (manages `helpline`, `otr_status_message`, `important_instructions` via config API). HelpQueries table updated: Reg. ID + Query Category columns, email removed, full mobile number visible. Bulk ZIP async export stub only (blocked by P4). | — |
+| P7 · Admin Panel | 🟢 Done | 6 audit gaps resolved: all 16 PRD §5.8.2 advertisement fields + publish validation (gap 1); application export CSV/Excel/PDF via POST /applications/export (gap 2); notice publish/unpublish toggle PATCH /notices/:id/status (gap 3); express-rate-limit wired 100/min public + 50/min admin (gap 4); AuditLog model + fire-and-forget audit middleware on all admin write actions (gap 5); Super Admin lockout email alert (gap 6). Bulk ZIP async export stub only (blocked by P4). | — |
 | P8 · Notifications | 🟡 Partial | Recruitment event triggers + SMS fallback + UIDAI OTP wiring + email service | **Q#9: WhatsApp BSP not registered (HARD BLOCK)** |
 | P9 · Security/Pentest | 🔴 Not started | Hardening checklist per PRD §9 + pentest scope + remediation SLA | Depends on P1–P8 |
 

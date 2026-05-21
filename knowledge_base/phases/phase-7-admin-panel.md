@@ -3,7 +3,7 @@
 | Field | Value |
 |-------|-------|
 | **Phase** | 7 of 9 |
-| **Status** | 🟢 Complete — 6 recruitment pages + controllers + routes + dashboard + admin 2FA UI + fee reconciliation + manual verify shipped. Bulk ZIP async export not yet built (blocked by P4). |
+| **Status** | 🟢 Complete — 6 recruitment pages + controllers + routes + dashboard + admin 2FA UI + fee reconciliation + manual verify shipped. 6 audit gaps closed: all 16 advertisement fields + publish validation; application CSV/Excel/PDF export; notice unpublish toggle; rate limiting (100/50 req/min); AuditLog model + fire-and-forget middleware; Super Admin lockout alert. Bulk ZIP async export stub only (blocked by P4). |
 | **Depends On** | Phase 1 (recruitment models must exist before pages can query them) |
 | **Blocks** | Phase 6 (call letter publish), Phase 8 (notifications use admin-managed data) |
 | **PRD Sections** | §5 M8 Administrator Panel · §9.1 Auth · §9.3 Authorization · §9.12 Audit Logging |
@@ -39,13 +39,19 @@
 | Notices list + publish/delete + create form | `Admin/src/pages/Recruitment/Notices.jsx`, `NoticesForm.jsx` |
 | Analytics controller — real recruitment stats | `Server/controllers/v1/analytics.controller.js` |
 | Candidate controller + routes (search, getById, toggleStatus) | `Server/controllers/v1/candidate.controller.js` |
-| Application controller + routes (search, getById, updateStatus) | `Server/controllers/v1/application.controller.js` |
+| Application controller + routes (search, getById, updateStatus, exportApplications CSV/Excel/PDF) | `Server/controllers/v1/application.controller.js` |
 | FeePayment controller + routes (search, getById, feeReconciliationReport, manualVerifyFee) | `Server/controllers/v1/feePayment.controller.js` |
 | CallLetter controller + routes (search, getById, update, roll number CSV) | `Server/controllers/v1/callLetter.controller.js` |
 | Server auth: 2FA TOTP (otplib v12+), IP whitelist, 15-min inactivity timeout | `Server/middlewares/authMiddleware.js`, `employee.controller.js` |
 | Admin 2FA setup UI page | `Admin/src/pages/Setup/TwoFactorSetup.jsx` — shows 2FA status, QR setup, enable flow |
 | Admin `/2fa-setup` route registered | `Admin/src/Routes/allRoutes.jsx` |
 | Secure file upload | `Server/middlewares/secureUpload.js` |
+| Advertisement model all 16 PRD §5.8.2 fields + publish validation (422 + missingFields) | `Server/models/Advertisement.js`, `advertisement.controller.js` |
+| Notice unpublish toggle PATCH /notices/:id/status | `Server/controllers/v1/notice.controller.js`, `notices.routes.js` |
+| AuditLog model + fire-and-forget logAudit middleware (PRD §9.12) | `Server/models/AuditLog.js`, `Server/middlewares/auditLog.js` |
+| Rate limiting wired: 100 req/min public, 50 req/min admin (PRD §9.11) | `Server/server.js` |
+| Super Admin lockout email alert (PRD §9.11) | `Server/controllers/v1/employee.controller.js` |
+| AdvertisementsForm.jsx all 7 missing fields + vacancyBreakdown sub-form | `Admin/src/pages/Recruitment/AdvertisementsForm.jsx` |
 
 **Backend routes already mounted:**
 `/api/v1/employees`, `/api/v1/departments`, `/api/v1/roles`, `/api/v1/menus`, `/api/v1/menu-groups`, `/api/v1/employee-roles`, `/api/v1/countries`, `/api/v1/states`, `/api/v1/cities`, `/api/v1/master-data`, `/api/v1/email-*`, `/api/v1/whatsapp`, `/api/v1/otp`
@@ -54,7 +60,7 @@
 
 ## Remaining Work 🔴
 
-> All 6 core sub-modules are DONE. Only async bulk ZIP export remains (blocked by P4 application data).
+> All 6 core sub-modules DONE. 6 audit gaps closed (2026-05-21). Only async bulk ZIP export remains (blocked by P4 application data).
 
 ### 8.1 Advertisement Management
 
