@@ -233,7 +233,11 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 8) {
+    if (
+      !newPassword ||
+      typeof newPassword !== "string" ||
+      newPassword.length < 8
+    ) {
       return res.status(400).json({
         isOk: false,
         message: "New password must be at least 8 characters",
@@ -257,9 +261,8 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    // Hash password — PRD §9.1 bcrypt cost ≥ 12
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     // Update password
     user.password = hashedPassword;

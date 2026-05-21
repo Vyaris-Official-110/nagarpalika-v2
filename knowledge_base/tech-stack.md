@@ -1,6 +1,6 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-20 session-end-2 (P2 nav gaps resolved: correct Registration/Online Application dropdowns, Fee+CallLetter standalone, VM marquee API-driven, Quick Links 6 items, Careers PDF Details button, Help useLang, i18n.js 6 nav keys — branch feat/p3-otr-registration)
+> Last updated: 2026-05-22 (security hardening: crypto.randomInt OTP, bcrypt 12 everywhere, lockout SMS/email, CSV export SUPER_ADMIN only, Help.jsx config-API helpline — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
 > **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped + audited. Application/Fee/CallLetter citizen flows blocked.
 
@@ -41,7 +41,7 @@ Nagarpalika/
 | `/about` | `About.jsx` | Static |
 | `/careers` | `Careers.jsx` | **API-driven** — fetches from `GET /api/v1/advertisements` |
 | `/notices` | `Notices.jsx` | **API-driven** — fetches from `GET /api/v1/notices` |
-| `/help` | `Help.jsx` | **API-driven** — FAQ + contact form → `POST /api/v1/help-queries` |
+| `/help` | `Help.jsx` | **API-driven** — FAQ + contact form → `POST /api/v1/help-queries`; fetches `helpline` + `helpline_email` from `GET /api/v1/config/:key` (fallback to static values) |
 | `/results` | `Results.jsx` | Static — form UI-only (not functional) |
 | `/callletter` | `CallLetter.jsx` | Static — form UI-only (not functional) |
 | `/contact` | `Contact.jsx` | Static — form UI-only (not functional) |
@@ -257,16 +257,18 @@ Nagarpalika/
 - ✅ DEPT_ADMIN scope enforcement (`roleScope.js` middleware)
 - ✅ Magic-byte MIME validation + WebP re-encode + UUID filenames
 - ✅ Security headers (Helmet + custom CSP/HSTS/X-Frame-Options)
-- ✅ OTP: 6-digit, 300s TTL, 3 attempts, rate-limited 3/hr/phone
+- ✅ OTP: 6-digit CSPRNG (`crypto.randomInt`), 300s TTL, 3 attempts, rate-limited 3/hr/phone
 - ✅ CAPTCHA: server-side reCAPTCHA verify at registration submit
 - ✅ Enumeration prevention on findRegistration endpoint
+- ✅ Candidate lockout notification: SMS + email sent on 5th failed login
+- ✅ CSV export (`/candidates/export`) restricted to SUPER_ADMIN only
+- ✅ Aadhaar Verhoeff checksum validated server-side (find + registration flow)
 
 ### Security Gaps Remaining (Before Go-Live / P9)
 
 - ❌ UIDAI Aadhaar OTP — stub in place (SHA-256 only); real UIDAI API when AUA granted
 - ❌ Payment gateway webhook HMAC verification (P5 — blocked)
 - ❌ Append-only audit log table (P9)
-- ❌ Aadhaar Verhoeff checksum server-side validation not wired
 
 ---
 

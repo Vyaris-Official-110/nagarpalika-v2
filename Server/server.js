@@ -31,7 +31,11 @@ const publicLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { isOk: false, message: "Too many requests, please try again later.", status: 429 },
+  message: {
+    isOk: false,
+    message: "Too many requests, please try again later.",
+    status: 429,
+  },
 });
 
 const adminLimiter = rateLimit({
@@ -39,7 +43,11 @@ const adminLimiter = rateLimit({
   max: 50,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { isOk: false, message: "Too many requests, please try again later.", status: 429 },
+  message: {
+    isOk: false,
+    message: "Too many requests, please try again later.",
+    status: 429,
+  },
 });
 
 // ES6 module equivalent of __dirname and __filename

@@ -439,9 +439,7 @@ export const loginEmployee = async (req, res) => {
               ),
             );
           })
-          .catch((err) =>
-            console.error("lockout alert failed:", err?.message),
-          );
+          .catch((err) => console.error("lockout alert failed:", err?.message));
       }
       await employee.save();
       return res

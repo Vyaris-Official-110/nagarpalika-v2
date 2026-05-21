@@ -27,10 +27,10 @@ router.patch(
   toggleCandidateStatus,
 );
 
-// CSV export — PRD §5.8.4
+// CSV export — PRD §5.8.4 — Super Admin only
 router.get(
   "/candidates/export",
-  authMiddleware(["SUPER_ADMIN", "ADMIN"]),
+  authMiddleware(["SUPER_ADMIN"]),
   exportCandidates,
 );
 

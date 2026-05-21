@@ -18,7 +18,7 @@ function hashAadhaar(aadhaar) {
 }
 
 function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return crypto.randomInt(100000, 1000000).toString();
 }
 
 function isDev() {
@@ -706,6 +706,15 @@ export const candidateLogin = async (req, res) => {
           Date.now() + LOCKOUT_MINUTES * 60 * 1000,
         );
         candidate.loginAttempts = 0;
+        const lockMsg = `Your NagarPalika account has been locked for ${LOCKOUT_MINUTES} minutes due to multiple failed login attempts.`;
+        sendSmsText(candidate.mobile, lockMsg).catch(() => {});
+        if (candidate.email) {
+          sendEmail({
+            to: candidate.email,
+            subject: "NagarPalika — Account Locked",
+            text: lockMsg,
+          }).catch(() => {});
+        }
       }
       await candidate.save();
       return res.status(401).json({
@@ -815,12 +824,10 @@ export const findSendOtp = async (req, res) => {
       if (candidate && !dobMatches(candidate.dob, dob)) candidate = null;
       targetMobile = candidate?.mobile;
     } else {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Invalid mode. Use 'mobile' or 'aadhaar'",
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Invalid mode. Use 'mobile' or 'aadhaar'",
+      });
     }
 
     // Send OTP if candidate found; same response regardless (enumeration prevention)
@@ -1292,12 +1299,10 @@ export const editVerifyAccessSend = async (req, res) => {
           "If your Aadhaar is registered, an OTP has been sent to your registered mobile number",
       });
     } else {
-      return res
-        .status(400)
-        .json({
-          isOk: false,
-          message: "Invalid mode. Use 'regid' or 'aadhaar'",
-        });
+      return res.status(400).json({
+        isOk: false,
+        message: "Invalid mode. Use 'regid' or 'aadhaar'",
+      });
     }
   } catch (err) {
     console.error("editVerifyAccessSend error:", err);

@@ -1,6 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { submitHelpQuery } from '../api/index'
+import api from '../api/index'
 import { useLang } from '../context/LangContext'
+
+const HELPLINE_FALLBACK = '1800-233-5500'
+const EMAIL_FALLBACK = 'recruitment@nagarpalika.gujarat.gov.in'
 
 const FAQS = [
   {
@@ -31,6 +35,17 @@ export default function Help() {
   const [form, setForm] = useState({ name: '', registrationId: '', queryCategory: '', email: '', mobile: '', message: '' })
   const [status, setStatus] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  const [helpline, setHelpline] = useState(HELPLINE_FALLBACK)
+  const [helpEmail, setHelpEmail] = useState(EMAIL_FALLBACK)
+
+  useEffect(() => {
+    api.get('/api/v1/config/helpline')
+      .then(res => { if (res.data?.data) setHelpline(res.data.data) })
+      .catch(() => {})
+    api.get('/api/v1/config/helpline_email')
+      .then(res => { if (res.data?.data) setHelpEmail(res.data.data) })
+      .catch(() => {})
+  }, [])
 
   function toggle(i) { setOpen(o => (o === i ? null : i)) }
 
@@ -59,6 +74,28 @@ export default function Help() {
       <div className="page-heading">
         <h1>Help &amp; FAQ</h1>
         <span className="guj">સહાય અને વારંવાર પૂછાતા પ્રશ્નો</span>
+      </div>
+
+      {/* PRD §5.6 — toll-free + email prominently at top */}
+      <div className="box" style={{ background: 'var(--ojas-cream)', marginBottom: 12 }}>
+        <div className="box-body" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px 32px', alignItems: 'center', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }} aria-hidden="true">📞</span>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Toll-Free Helpline</div>
+              <a href={`tel:${helpline.replace(/\s/g, '')}`} style={{ fontWeight: 700, fontSize: 16, color: 'var(--ojas-navy)' }}>{helpline}</a>
+              <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)' }}>Mon – Sat · 10:00 – 18:00 IST</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 20 }} aria-hidden="true">✉️</span>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Email</div>
+              <a href={`mailto:${helpEmail}`} style={{ fontWeight: 700, color: 'var(--ojas-navy)' }}>{helpEmail}</a>
+              <div style={{ fontSize: 11, color: 'var(--ojas-ink-3)' }}>Response within 3–5 working days</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="box">

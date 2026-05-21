@@ -50,7 +50,7 @@ export const createCompanyMaster = async (req, res) => {
       }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const companyMaster = new CompanyMasterModels({
       companyName,
