@@ -1,6 +1,6 @@
 # Tech Stack — Actual Codebase State
 
-> Last updated: 2026-05-22 (security hardening: crypto.randomInt OTP, bcrypt 12 everywhere, lockout SMS/email, CSV export SUPER_ADMIN only, Help.jsx config-API helpline — branch feat/p3-otr-registration)
+> Last updated: 2026-05-22 (security hardening: crypto.randomInt OTP, bcrypt 12 everywhere, lockout SMS/email, CSV export SUPER_ADMIN only, Help.jsx config-API helpline; rate limiter buckets split, AuthContext 429 safe — branch feat/p3-otr-registration)
 > Source: Full codebase scan of Web/, Admin/, Server/
 > **Current state:** P1 foundation, P2 public frontend, P3 OTR registration, P7 admin panel all shipped + audited. Application/Fee/CallLetter citizen flows blocked.
 
@@ -263,6 +263,8 @@ Nagarpalika/
 - ✅ Candidate lockout notification: SMS + email sent on 5th failed login
 - ✅ CSV export (`/candidates/export`) restricted to SUPER_ADMIN only
 - ✅ Aadhaar Verhoeff checksum validated server-side (find + registration flow)
+- ✅ Rate limiters: public 100/min, admin 200/min, session-verify (`/employees`) 300/min — separate buckets prevent rate-limit-induced admin logout
+- ✅ Admin `AuthContext`: 429/network errors skip session clear; only 401/403 trigger logout + redirect
 
 ### Security Gaps Remaining (Before Go-Live / P9)
 

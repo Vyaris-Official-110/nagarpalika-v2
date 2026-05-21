@@ -44,8 +44,9 @@ const HelpQueries = () => {
       } else {
         setRows([]);
       }
-    } catch {
-      toast.error("Failed to load help queries.");
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to load help queries.";
+      toast.error(msg);
       setRows([]);
     }
     setLoading(false);

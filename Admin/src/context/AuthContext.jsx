@@ -61,13 +61,16 @@ const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.log("Session verification failed:", error);
-            // Session is invalid, clear localStorage and redirect
-            localStorage.removeItem("role");
-            setAdminData(null);
-            setRole(null);
+            const status = error.response?.status;
+            if (status === 401 || status === 403) {
+                localStorage.removeItem("role");
+                setAdminData(null);
+                setRole(null);
+                navigate("/");
+            }
+            // 429 / network errors — do not log out
             setIsSessionVerified(true);
             setLoading(false);
-            navigate("/");
         }
     }, [navigate, getAdmin]);
 

@@ -141,7 +141,7 @@ export default function Help() {
         <form onSubmit={handleSubmit} className="help-form" noValidate>
           <div className="form-row">
             <label>
-              Full Name <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
+              <span>Full Name <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span></span>
               <input
                 type="text"
                 name="name"
@@ -152,7 +152,7 @@ export default function Help() {
               />
             </label>
             <label>
-              Registration ID
+              <span>Registration ID</span>
               <input
                 type="text"
                 name="registrationId"
@@ -165,7 +165,7 @@ export default function Help() {
           </div>
           <div className="form-row">
             <label>
-              Query Category <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
+              <span>Query Category <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span></span>
               <select
                 name="queryCategory"
                 value={form.queryCategory}
@@ -182,7 +182,7 @@ export default function Help() {
               </select>
             </label>
             <label>
-              Mobile Number
+              <span>Mobile Number</span>
               <input
                 type="tel"
                 name="mobile"
@@ -195,7 +195,7 @@ export default function Help() {
           </div>
           <div className="form-full">
             <label>
-              Description <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span>
+              <span>Description <span aria-hidden="true" style={{ color: 'var(--ojas-red)' }}>*</span></span>
               <textarea
                 name="message"
                 value={form.message}

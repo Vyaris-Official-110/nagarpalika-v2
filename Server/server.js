@@ -25,6 +25,19 @@ import { tenantMiddleware } from "./middlewares/tenantMiddleware.js";
 import { csrfMiddleware } from "./middlewares/csrfMiddleware.js";
 import rateLimit from "express-rate-limit";
 
+// Session verify — high limit; shared admin bucket would log out heavy users
+const sessionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    isOk: false,
+    message: "Too many requests, please try again later.",
+    status: 429,
+  },
+});
+
 // PRD §9.11 — 100 req/min per IP (public), 50 req/min per IP (admin)
 const publicLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -40,7 +53,7 @@ const publicLimiter = rateLimit({
 
 const adminLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 50,
+  max: 200, // PRD §9.11 "per user" — per-IP in dev collapses all users; 200 is safe
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -240,12 +253,14 @@ app.use("/api/v1", publicLimiter, candidatesRoutes);
 app.use("/api/v1", publicLimiter, otrRoutes);
 app.use("/api/v1/otp", publicLimiter, otpRoutes);
 
+// Session verify — own limiter (300/min) so it doesn't burn admin bucket
+app.use("/api/v1", sessionLimiter, employeesRoutes);
+
 // Admin routes — 50 req/min per IP (PRD §9.11)
 app.use("/api/v1", adminLimiter, companiesRoutes);
 app.use("/api/v1", adminLimiter, departmentsRoutes);
 app.use("/api/v1", adminLimiter, emailsRoutes);
 app.use("/api/v1", adminLimiter, employeeRolesRoutes);
-app.use("/api/v1", adminLimiter, employeesRoutes);
 app.use("/api/v1", adminLimiter, locationsRoutes);
 app.use("/api/v1", adminLimiter, menusRoutes);
 app.use("/api/v1", adminLimiter, rolesRoutes);
