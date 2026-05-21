@@ -15,9 +15,14 @@ import {
 } from "../../api/advertisements.api";
 import { getAllDepartments } from "../../api/departments.api";
 
+const emptyBreakdown = { GEN: "", OBC: "", SC: "", ST: "", EWS: "", PH: "" };
+
 const empty = {
-    advtNo: "", postTitle: "", departmentId: "", postClass: "III",
+    advtNo: "", postTitle: "", postTitleGu: "", departmentId: "", postClass: "III",
     payScale: "", vacancies: "", applicationFee: "", startDate: "", endDate: "",
+    ageLimit: "", eduQualification: "", phDescription: "", experienceRequired: "",
+    probationPeriod: "", otherConditions: "",
+    vacancyBreakdown: { ...emptyBreakdown },
 };
 
 const AdvertisementsForm = () => {
@@ -50,6 +55,7 @@ const AdvertisementsForm = () => {
                 setForm({
                     advtNo: d.advtNo ?? "",
                     postTitle: d.postTitle ?? "",
+                    postTitleGu: d.postTitleGu ?? "",
                     departmentId: d.departmentId?._id ?? d.departmentId ?? "",
                     postClass: d.postClass ?? "III",
                     payScale: d.payScale ?? "",
@@ -57,6 +63,20 @@ const AdvertisementsForm = () => {
                     applicationFee: d.applicationFee ?? "",
                     startDate: d.startDate ? d.startDate.slice(0, 10) : "",
                     endDate: d.endDate ? d.endDate.slice(0, 10) : "",
+                    ageLimit: d.ageLimit ?? "",
+                    eduQualification: d.eduQualification ?? "",
+                    phDescription: d.phDescription ?? "",
+                    experienceRequired: d.experienceRequired ?? "",
+                    probationPeriod: d.probationPeriod ?? "",
+                    otherConditions: d.otherConditions ?? "",
+                    vacancyBreakdown: {
+                        GEN: d.vacancyBreakdown?.GEN ?? "",
+                        OBC: d.vacancyBreakdown?.OBC ?? "",
+                        SC:  d.vacancyBreakdown?.SC  ?? "",
+                        ST:  d.vacancyBreakdown?.ST  ?? "",
+                        EWS: d.vacancyBreakdown?.EWS ?? "",
+                        PH:  d.vacancyBreakdown?.PH  ?? "",
+                    },
                 });
                 if (d.pdfPath) setPdfPath(d.pdfPath);
             })
@@ -68,6 +88,11 @@ const AdvertisementsForm = () => {
         setForm((f) => ({ ...f, [name]: value }));
     };
 
+    const handleBreakdownChange = (e) => {
+        const { name, value } = e.target;
+        setForm((f) => ({ ...f, vacancyBreakdown: { ...f.vacancyBreakdown, [name]: value } }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
@@ -76,6 +101,9 @@ const AdvertisementsForm = () => {
                 ...form,
                 vacancies: Number(form.vacancies),
                 applicationFee: Number(form.applicationFee),
+                vacancyBreakdown: Object.fromEntries(
+                    Object.entries(form.vacancyBreakdown).map(([k, v]) => [k, Number(v) || 0]),
+                ),
             };
             if (isEdit) {
                 await updateAdvertisement(id, payload);
@@ -120,11 +148,12 @@ const AdvertisementsForm = () => {
                         pageTitle="Advertisements"
                     />
                     <Row>
-                        <Col lg={8}>
+                        <Col lg={10}>
                             <Card>
                                 <CardHeader><h5 className="mb-0">{pageLabel}</h5></CardHeader>
                                 <CardBody>
                                     <Form onSubmit={handleSubmit}>
+                                        {/* Basic Info */}
                                         <Row>
                                             <Col md={6}>
                                                 <FormGroup>
@@ -142,10 +171,16 @@ const AdvertisementsForm = () => {
                                                     </Input>
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={12}>
+                                            <Col md={6}>
                                                 <FormGroup>
-                                                    <Label>Post Title *</Label>
+                                                    <Label>Post Title (English) *</Label>
                                                     <Input name="postTitle" value={form.postTitle} onChange={handleChange} required disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={6}>
+                                                <FormGroup>
+                                                    <Label>Post Title (Gujarati)</Label>
+                                                    <Input name="postTitleGu" value={form.postTitleGu} onChange={handleChange} disabled={isView} />
                                                 </FormGroup>
                                             </Col>
                                             <Col md={6}>
@@ -165,31 +200,102 @@ const AdvertisementsForm = () => {
                                                     <Input name="payScale" value={form.payScale} onChange={handleChange} placeholder="e.g. ₹18,000–₹56,900" disabled={isView} />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={4}>
+                                        </Row>
+
+                                        {/* Vacancies & Dates */}
+                                        <Row>
+                                            <Col md={3}>
                                                 <FormGroup>
-                                                    <Label>Vacancies *</Label>
+                                                    <Label>Total Vacancies *</Label>
                                                     <Input type="number" name="vacancies" value={form.vacancies} onChange={handleChange} min={1} required disabled={isView} />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={4}>
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>Age Limit</Label>
+                                                    <Input name="ageLimit" value={form.ageLimit} onChange={handleChange} placeholder="e.g. 18–35 years" disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={3}>
                                                 <FormGroup>
                                                     <Label>Application Fee (₹) *</Label>
                                                     <Input type="number" name="applicationFee" value={form.applicationFee} onChange={handleChange} min={0} required disabled={isView} />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={4}>
+                                            <Col md={3}>
+                                                <FormGroup>
+                                                    <Label>Probation Period</Label>
+                                                    <Input name="probationPeriod" value={form.probationPeriod} onChange={handleChange} placeholder="e.g. 2 years" disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={6}>
                                                 <FormGroup>
                                                     <Label>Start Date</Label>
                                                     <Input type="date" name="startDate" value={form.startDate} onChange={handleChange} disabled={isView} />
                                                 </FormGroup>
                                             </Col>
-                                            <Col md={4}>
+                                            <Col md={6}>
                                                 <FormGroup>
                                                     <Label>Last Date *</Label>
                                                     <Input type="date" name="endDate" value={form.endDate} onChange={handleChange} required disabled={isView} />
                                                 </FormGroup>
                                             </Col>
                                         </Row>
+
+                                        {/* Category-wise Vacancy Breakdown */}
+                                        <Card className="border mb-3">
+                                            <CardHeader className="bg-light py-2">
+                                                <small className="fw-semibold">Category-wise Vacancy Breakdown</small>
+                                            </CardHeader>
+                                            <CardBody className="py-2">
+                                                <Row>
+                                                    {["GEN", "OBC", "SC", "ST", "EWS", "PH"].map((cat) => (
+                                                        <Col md={2} key={cat}>
+                                                            <FormGroup>
+                                                                <Label>{cat}</Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    name={cat}
+                                                                    value={form.vacancyBreakdown[cat]}
+                                                                    onChange={handleBreakdownChange}
+                                                                    min={0}
+                                                                    disabled={isView}
+                                                                />
+                                                            </FormGroup>
+                                                        </Col>
+                                                    ))}
+                                                </Row>
+                                            </CardBody>
+                                        </Card>
+
+                                        {/* Qualifications & Conditions */}
+                                        <Row>
+                                            <Col md={6}>
+                                                <FormGroup>
+                                                    <Label>Educational Qualification</Label>
+                                                    <Input type="textarea" rows={3} name="eduQualification" value={form.eduQualification} onChange={handleChange} disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={6}>
+                                                <FormGroup>
+                                                    <Label>PH Description</Label>
+                                                    <Input type="textarea" rows={3} name="phDescription" value={form.phDescription} onChange={handleChange} disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={6}>
+                                                <FormGroup>
+                                                    <Label>Experience Required</Label>
+                                                    <Input type="textarea" rows={3} name="experienceRequired" value={form.experienceRequired} onChange={handleChange} disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                            <Col md={6}>
+                                                <FormGroup>
+                                                    <Label>Other Conditions</Label>
+                                                    <Input type="textarea" rows={3} name="otherConditions" value={form.otherConditions} onChange={handleChange} disabled={isView} />
+                                                </FormGroup>
+                                            </Col>
+                                        </Row>
+
                                         <div className="d-flex gap-2 mt-3">
                                             {!isView && (
                                                 <button type="submit" className="btn btn-primary" disabled={saving}>
@@ -206,7 +312,7 @@ const AdvertisementsForm = () => {
                         </Col>
                     {id && (
                         <Row className="mt-3">
-                            <Col lg={8}>
+                            <Col lg={10}>
                                 <Card>
                                     <CardHeader><h5 className="mb-0">Advertisement PDF</h5></CardHeader>
                                     <CardBody>

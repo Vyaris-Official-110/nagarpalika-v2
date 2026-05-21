@@ -23,6 +23,24 @@ import {
 import { mongoSanitizer } from "./middlewares/inputValidator.js";
 import { tenantMiddleware } from "./middlewares/tenantMiddleware.js";
 import { csrfMiddleware } from "./middlewares/csrfMiddleware.js";
+import rateLimit from "express-rate-limit";
+
+// PRD §9.11 — 100 req/min per IP (public), 50 req/min per IP (admin)
+const publicLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { isOk: false, message: "Too many requests, please try again later.", status: 429 },
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { isOk: false, message: "Too many requests, please try again later.", status: 429 },
+});
 
 // ES6 module equivalent of __dirname and __filename
 const __filename = fileURLToPath(import.meta.url);
@@ -207,27 +225,30 @@ import callLettersRoutes from "./routes/v1/callLetters.routes.js";
 import otrRoutes from "./routes/v1/otr.routes.js";
 import configRoutes from "./routes/v1/config.routes.js";
 
-app.use("/api/v1", companiesRoutes);
-app.use("/api/v1", departmentsRoutes);
-app.use("/api/v1", emailsRoutes);
-app.use("/api/v1", employeeRolesRoutes);
-app.use("/api/v1", employeesRoutes);
-app.use("/api/v1", locationsRoutes);
-app.use("/api/v1", menusRoutes);
-app.use("/api/v1", rolesRoutes);
-app.use("/api/v1", analyticsRoutes);
-app.use("/api/v1", whatsappRoutes);
-app.use("/api/v1/otp", otpRoutes);
-app.use("/api/v1/master-data", masterDataRoutes);
-app.use("/api/v1", advertisementsRoutes);
-app.use("/api/v1", noticesRoutes);
-app.use("/api/v1", helpQueryRoutes);
-app.use("/api/v1", candidatesRoutes);
-app.use("/api/v1", applicationsRoutes);
-app.use("/api/v1", feePaymentsRoutes);
-app.use("/api/v1", callLettersRoutes);
-app.use("/api/v1", otrRoutes);
-app.use("/api/v1", configRoutes);
+// Public routes — 100 req/min per IP (PRD §9.11)
+app.use("/api/v1", publicLimiter, noticesRoutes);
+app.use("/api/v1", publicLimiter, advertisementsRoutes);
+app.use("/api/v1", publicLimiter, candidatesRoutes);
+app.use("/api/v1", publicLimiter, otrRoutes);
+app.use("/api/v1/otp", publicLimiter, otpRoutes);
+
+// Admin routes — 50 req/min per IP (PRD §9.11)
+app.use("/api/v1", adminLimiter, companiesRoutes);
+app.use("/api/v1", adminLimiter, departmentsRoutes);
+app.use("/api/v1", adminLimiter, emailsRoutes);
+app.use("/api/v1", adminLimiter, employeeRolesRoutes);
+app.use("/api/v1", adminLimiter, employeesRoutes);
+app.use("/api/v1", adminLimiter, locationsRoutes);
+app.use("/api/v1", adminLimiter, menusRoutes);
+app.use("/api/v1", adminLimiter, rolesRoutes);
+app.use("/api/v1", adminLimiter, analyticsRoutes);
+app.use("/api/v1", adminLimiter, whatsappRoutes);
+app.use("/api/v1/master-data", adminLimiter, masterDataRoutes);
+app.use("/api/v1", adminLimiter, helpQueryRoutes);
+app.use("/api/v1", adminLimiter, applicationsRoutes);
+app.use("/api/v1", adminLimiter, feePaymentsRoutes);
+app.use("/api/v1", adminLimiter, callLettersRoutes);
+app.use("/api/v1", adminLimiter, configRoutes);
 
 console.log("✅ V1 API routes loaded");
 

@@ -1,4 +1,5 @@
 import Notice from "../../models/Notice.js";
+import { logAudit } from "../../middlewares/auditLog.js";
 import path from "path";
 import fs from "fs";
 
@@ -106,6 +107,7 @@ export const publishNotice = async (req, res) => {
 
     notice.status = "published";
     await notice.save();
+    logAudit(req, "notice.publish", "notice", id);
 
     return res
       .status(200)
@@ -115,6 +117,26 @@ export const publishNotice = async (req, res) => {
     return res
       .status(500)
       .json({ isOk: false, message: "Internal server error", status: 500 });
+  }
+};
+
+export const toggleNoticeStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notice = await Notice.findOne({ _id: id, tenantId: req.tenantId, isDeleted: false });
+
+    if (!notice) {
+      return res.status(404).json({ isOk: false, message: "Notice not found", status: 404 });
+    }
+
+    notice.status = notice.status === "published" ? "draft" : "published";
+    await notice.save();
+    logAudit(req, `notice.${notice.status}`, "notice", id);
+
+    return res.status(200).json({ isOk: true, message: `Notice ${notice.status}`, data: { status: notice.status }, status: 200 });
+  } catch (error) {
+    console.error("Error in toggleNoticeStatus:", error);
+    return res.status(500).json({ isOk: false, message: "Internal server error", status: 500 });
   }
 };
 
@@ -135,6 +157,7 @@ export const deleteNotice = async (req, res) => {
 
     notice.isDeleted = true;
     await notice.save();
+    logAudit(req, "notice.delete", "notice", id);
 
     return res.status(200).json({
       isOk: true,

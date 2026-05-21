@@ -1,8 +1,10 @@
 import EmployeeModels from "../../models/Employee.js";
 import CompanyMaster from "../../models/CompanyMaster.js";
+import RoleMaster from "../../models/RoleMaster.js";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { generateSecret, generateURI, verify as totpVerify } from "otplib";
+import { sendEmail } from "../../services/email.service.js";
 
 export const createEmployee = async (req, res) => {
   try {
@@ -413,6 +415,33 @@ export const loginEmployee = async (req, res) => {
           Date.now() + ADMIN_LOCKOUT_MINUTES * 60 * 1000,
         );
         employee.loginAttempts = 0;
+        // PRD §9.11 — alert Super Admins on lockout (fire-and-forget)
+        RoleMaster.findOne({ roleName: "SUPER_ADMIN" })
+          .then((superAdminRole) => {
+            if (!superAdminRole) return;
+            return EmployeeModels.find({
+              roleId: superAdminRole._id,
+              isDeleted: false,
+            }).select("emailOffice");
+          })
+          .then((admins) => {
+            if (!admins?.length) return;
+            const lockedUntil = new Date(
+              Date.now() + ADMIN_LOCKOUT_MINUTES * 60 * 1000,
+            ).toLocaleString("en-IN");
+            return Promise.all(
+              admins.map((a) =>
+                sendEmail({
+                  to: a.emailOffice,
+                  subject: "Admin Account Locked",
+                  text: `Admin account ${employee.emailOffice} locked after ${ADMIN_MAX_ATTEMPTS} failed login attempts. Locked until ${lockedUntil}.`,
+                }),
+              ),
+            );
+          })
+          .catch((err) =>
+            console.error("lockout alert failed:", err?.message),
+          );
       }
       await employee.save();
       return res

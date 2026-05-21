@@ -3,6 +3,7 @@ import {
   listApplications,
   getApplicationById,
   updateApplicationStatus,
+  exportApplications,
 } from "../../controllers/v1/application.controller.js";
 import { authMiddleware } from "../../middlewares/authMiddleware.js";
 
@@ -24,6 +25,12 @@ router.patch(
   "/applications/:id/status",
   authMiddleware(["SUPER_ADMIN", "ADMIN"]),
   updateApplicationStatus,
+);
+
+router.post(
+  "/applications/export",
+  authMiddleware(["SUPER_ADMIN", "ADMIN"]),
+  exportApplications,
 );
 
 export default router;

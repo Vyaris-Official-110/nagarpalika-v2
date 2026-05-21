@@ -7,6 +7,7 @@ import {
   createNotice,
   updateNotice,
   publishNotice,
+  toggleNoticeStatus,
   deleteNotice,
   listNoticesByParams,
   uploadNoticePdf,
@@ -39,6 +40,11 @@ router.patch(
   "/notices/:id/publish",
   authMiddleware(["SUPER_ADMIN", "ADMIN"]),
   publishNotice,
+);
+router.patch(
+  "/notices/:id/status",
+  authMiddleware(["SUPER_ADMIN", "ADMIN"]),
+  toggleNoticeStatus,
 );
 router.delete(
   "/notices/:id",
